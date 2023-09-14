@@ -8,6 +8,7 @@ const (
 	SSH_KEY    SSHType = 2
 )
 
+// used by deploy, exe, stop .etc
 type RemoteHost struct {
 	Ip         string
 	SSHPort    int
