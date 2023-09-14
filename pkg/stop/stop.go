@@ -29,8 +29,8 @@ type GeminiStop struct {
 	configurator config.Configurator // conf reader
 	executor     exec.Executor       // execute commands on remote host
 
-	needDelete bool // whether to delete logs and data
-	upDataPath string
+	needDelete bool              // whether to delete logs and data
+	upDataPath map[string]string // ip->up path
 
 	wg sync.WaitGroup
 }
@@ -40,7 +40,7 @@ func NewGeminiStop(delete bool) Stop {
 		remotes:      make(map[string]*config.RemoteHost),
 		stops:        make(map[string]*exec.StopAction),
 		sshClients:   make(map[string]*ssh.Client),
-		configurator: config.NewGeminiConfigurator(util.User_conf_path, util.Conf_gen_script_path),
+		configurator: config.NewGeminiConfigurator(util.User_conf_path, "", "", ""),
 		needDelete:   delete,
 	}
 	return new
@@ -52,7 +52,6 @@ func (s *GeminiStop) Prepare() error {
 		return err
 	}
 	conf := s.configurator.GetConfig()
-	s.upDataPath = conf.SSHConfig.UpDataPath
 
 	if err = s.prepareRemotes(conf); err != nil {
 		return err
@@ -72,26 +71,27 @@ func (s *GeminiStop) prepareRemotes(c *config.Config) error {
 		return util.UnexpectedNil
 	}
 
-	sshConfig := c.SSHConfig
-	var typ config.SSHType
-	switch sshConfig.Typ {
-	case util.SSH_KEY:
-		typ = config.SSH_KEY
-	case util.SSH_PW:
-		typ = config.SSH_PW
-	default:
-		return util.UnknowSSHType
-	}
+	for ip, ssh := range c.SSHConfig {
+		var typ config.SSHType
+		switch ssh.Typ {
+		case util.SSH_KEY:
+			typ = config.SSH_KEY
+		case util.SSH_PW:
+			typ = config.SSH_PW
+		default:
+			return util.UnknowSSHType
+		}
 
-	for _, ip := range c.HostConfig.HostIPs {
 		s.remotes[ip] = &config.RemoteHost{
 			Ip:       ip,
-			SSHPort:  sshConfig.Port,
-			User:     sshConfig.User,
-			Password: sshConfig.Password,
-			KeyPath:  sshConfig.KeyPath,
+			SSHPort:  ssh.Port,
+			User:     ssh.User,
+			Password: ssh.Password,
+			KeyPath:  ssh.KeyPath,
 			Typ:      typ,
 		}
+
+		s.upDataPath[ip] = ssh.UpDataPath
 	}
 
 	if err := s.tryConnect(); err != nil {
@@ -122,14 +122,9 @@ func (s *GeminiStop) tryConnect() error {
 }
 
 func (s *GeminiStop) prepareStopActions(c *config.Config) error {
-	hostMap := make(map[string]string)
-	for i := 0; i < len(c.HostConfig.HostNames); i++ {
-		hostMap[c.HostConfig.HostNames[i]] = c.HostConfig.HostIPs[i]
-	}
 
 	// ts-meta
-	for _, hostName := range c.CommonConfig.MetaHosts {
-		ip := hostMap[hostName]
+	for ip := range c.SSHConfig {
 		if s.stops[ip] == nil {
 			s.stops[ip] = &exec.StopAction{
 				Remote: s.remotes[ip],
@@ -139,8 +134,7 @@ func (s *GeminiStop) prepareStopActions(c *config.Config) error {
 	}
 
 	// ts-sql
-	for _, hostName := range c.CommonConfig.SqlHosts {
-		ip := hostMap[hostName]
+	for ip := range c.SSHConfig {
 		if s.stops[ip] == nil {
 			s.stops[ip] = &exec.StopAction{
 				Remote: s.remotes[ip],
@@ -150,8 +144,7 @@ func (s *GeminiStop) prepareStopActions(c *config.Config) error {
 	}
 
 	// ts-store
-	for _, hostName := range c.CommonConfig.StoreHosts {
-		ip := hostMap[hostName]
+	for ip := range c.SSHConfig {
 		if s.stops[ip] == nil {
 			s.stops[ip] = &exec.StopAction{
 				Remote: s.remotes[ip],

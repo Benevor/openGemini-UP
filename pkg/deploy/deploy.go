@@ -55,7 +55,7 @@ func NewGeminiDeployer(v string) Deployer {
 		sshClients:   make(map[string]*ssh.Client),
 		sftpClients:  make(map[string]*sftp.Client),
 		version:      v,
-		configurator: config.NewGeminiConfigurator(util.User_conf_path, util.Conf_gen_script_path),
+		configurator: config.NewGeminiConfigurator(util.User_conf_path, filepath.Join(util.Download_dst, v, util.Local_etc_rel_path, util.Local_conf_name), filepath.Join(util.Download_dst, util.Local_etc_rel_path), v),
 		downloader:   download.NewGeminiDownloader(v),
 		runs:         &exec.RunActions{},
 	}
@@ -124,26 +124,24 @@ func (d *GeminiDeployer) prepareRemotes(c *config.Config, needSftp bool) error {
 		return util.UnexpectedNil
 	}
 
-	sshConfig := c.SSHConfig
-	var typ config.SSHType
-	switch sshConfig.Typ {
-	case util.SSH_KEY:
-		typ = config.SSH_KEY
-	case util.SSH_PW:
-		typ = config.SSH_PW
-	default:
-		return util.UnknowSSHType
-	}
-
-	for _, ip := range c.HostConfig.HostIPs {
+	for ip, ssh := range c.SSHConfig {
+		var typ config.SSHType
+		switch ssh.Typ {
+		case util.SSH_KEY:
+			typ = config.SSH_KEY
+		case util.SSH_PW:
+			typ = config.SSH_PW
+		default:
+			return util.UnknowSSHType
+		}
 		d.remotes[ip] = &config.RemoteHost{
 			Ip:         ip,
-			SSHPort:    sshConfig.Port,
-			User:       sshConfig.User,
-			Password:   sshConfig.Password,
-			KeyPath:    sshConfig.KeyPath,
+			SSHPort:    ssh.Port,
+			User:       ssh.User,
+			Password:   ssh.Password,
+			KeyPath:    ssh.KeyPath,
 			Typ:        typ,
-			UpDataPath: sshConfig.UpDataPath,
+			UpDataPath: ssh.UpDataPath,
 		}
 	}
 
@@ -205,14 +203,8 @@ func (d *GeminiDeployer) prepareForUpload() error {
 }
 
 func (d *GeminiDeployer) prepareUploadActions(c *config.Config) error {
-	hostMap := make(map[string]string)
-	for i := 0; i < len(c.HostConfig.HostNames); i++ {
-		hostMap[c.HostConfig.HostNames[i]] = c.HostConfig.HostIPs[i]
-	}
-
 	// ts-meta
-	for _, hostName := range c.CommonConfig.MetaHosts {
-		host := hostMap[hostName]
+	for host := range c.SSHConfig {
 		if d.uploads[host] == nil {
 			d.uploads[host] = &UploadAction{
 				remoteHost: d.remotes[host],
@@ -226,8 +218,7 @@ func (d *GeminiDeployer) prepareUploadActions(c *config.Config) error {
 	}
 
 	// ts-sql
-	for _, hostName := range c.CommonConfig.SqlHosts {
-		host := hostMap[hostName]
+	for host := range c.SSHConfig {
 		if d.uploads[host] == nil {
 			d.uploads[host] = &UploadAction{
 				remoteHost: d.remotes[host],
@@ -241,8 +232,7 @@ func (d *GeminiDeployer) prepareUploadActions(c *config.Config) error {
 	}
 
 	// ts-store
-	for _, hostName := range c.CommonConfig.StoreHosts {
-		host := hostMap[hostName]
+	for host := range c.SSHConfig {
 		if d.uploads[host] == nil {
 			d.uploads[host] = &UploadAction{
 				remoteHost: d.remotes[host],
@@ -256,7 +246,7 @@ func (d *GeminiDeployer) prepareUploadActions(c *config.Config) error {
 	}
 
 	// conf and script
-	for _, host := range c.HostConfig.HostIPs {
+	for host := range c.SSHConfig {
 		if d.uploads[host] == nil {
 			d.uploads[host] = &UploadAction{
 				remoteHost: d.remotes[host],
@@ -279,16 +269,9 @@ func (d *GeminiDeployer) prepareUploadActions(c *config.Config) error {
 }
 
 func (d *GeminiDeployer) prepareRunActions(c *config.Config) error {
-	hostMap := make(map[string]string)
-	for i := 0; i < len(c.HostConfig.HostNames); i++ {
-		hostMap[c.HostConfig.HostNames[i]] = c.HostConfig.HostIPs[i]
-	}
-
 	// ts-meta
 	i := 1
-	for _, hostName := range c.CommonConfig.MetaHosts {
-		host := hostMap[hostName]
-
+	for host := range c.SSHConfig {
 		d.runs.MetaAction = append(d.runs.MetaAction, &exec.RunAction{
 			Info: &exec.RunInfo{
 				ScriptPath: filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_etc_rel_path, util.Install_Script),
@@ -306,9 +289,7 @@ func (d *GeminiDeployer) prepareRunActions(c *config.Config) error {
 
 	// ts-sql
 	i = 1
-	for _, hostName := range c.CommonConfig.SqlHosts {
-		host := hostMap[hostName]
-
+	for host := range c.SSHConfig {
 		d.runs.SqlAction = append(d.runs.SqlAction, &exec.RunAction{
 			Info: &exec.RunInfo{
 				ScriptPath: filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_etc_rel_path, util.Install_Script),
@@ -326,9 +307,7 @@ func (d *GeminiDeployer) prepareRunActions(c *config.Config) error {
 
 	// ts-store
 	i = 1
-	for _, hostName := range c.CommonConfig.StoreHosts {
-		host := hostMap[hostName]
-
+	for host := range c.SSHConfig {
 		d.runs.StoreAction = append(d.runs.StoreAction, &exec.RunAction{
 			Info: &exec.RunInfo{
 				ScriptPath: filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_etc_rel_path, util.Install_Script),

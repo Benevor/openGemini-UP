@@ -18,16 +18,16 @@ const (
 const (
 	Local_bin_rel_path = "usr/bin"
 	Local_etc_rel_path = "etc"
+	Local_conf_name    = "openGemini.conf"
 )
 
 // config
 const (
-	User_conf_path       = "./up.conf"
-	Conf_gen_script_path = "./scripts/conf_gen.sh"
-	Install_script_path  = "./scripts/install.sh"
-	Remote_conf_suffix   = "-openGemini.conf"
-	SSH_KEY              = "SSH_KEY"
-	SSH_PW               = "SSH_PW"
+	User_conf_path      = "./topology.example.yaml"
+	Install_script_path = "./scripts/install.sh"
+	Remote_conf_suffix  = "-openGemini.conf"
+	SSH_KEY             = "SSH_KEY"
+	SSH_PW              = "SSH_PW"
 )
 
 // file name
