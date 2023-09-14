@@ -67,7 +67,7 @@ type StoreYaml struct {
 	MetaDir    string `yaml:"meta_dir"`
 }
 
-func updataWithDefaults(y *Yaml) {
+func updataWithGlobalDefaults(y *Yaml) {
 	for i := range y.TsMeta {
 		if y.TsMeta[i].SSHPort == 0 {
 			y.TsMeta[i].SSHPort = y.Global.SSHPort
@@ -115,7 +115,7 @@ func ReadFromYaml(yamlPath string) (Yaml, error) {
 	}
 
 	// Update with default values
-	updataWithDefaults(&y)
+	updataWithGlobalDefaults(&y)
 
 	return y, nil
 }

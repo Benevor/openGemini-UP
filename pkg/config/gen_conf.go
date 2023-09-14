@@ -23,7 +23,6 @@ type MetaPorts struct {
 	Gossip int
 }
 
-// TODO: did not process the "gemini-deploy/${version}"
 func GenConfs(y Yaml, template Toml, path string) {
 	hosts := make(map[string]HostFile)
 	var metaPorts []MetaPorts

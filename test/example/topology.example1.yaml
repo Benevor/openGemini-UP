@@ -12,7 +12,7 @@ global:
   # openGemini Cluster log file storage directory.
   log_dir: "/gemini-deploy/logs"
   # Storage directory for cluster deployment files, startup scripts, and configuration files.
-  deploy_dir: "/gemini-deploy/${version}"
+  deploy_dir: "/gemini-deploy"
   # operating system, linux/darwin/windows.
   os: "linux" 
   # Supported values: "amd64", "arm64" (default: "amd64").
@@ -37,7 +37,7 @@ ts-meta:
     # openGemini Cluster log file storage directory. (same on same server)
     log_dir: "/gemini-deploy/log"
     # Storage directory for cluster deployment files, startup scripts, and configuration files. (same on same server)
-    deploy_dir: "/gemini-deploy/${version}"
+    deploy_dir: "/gemini-deploy"
   - host: 10.0.1.12
     # SSH port of the server. (same on same server)
     ssh_port: 22
@@ -54,7 +54,7 @@ ts-meta:
     # openGemini Cluster log file storage directory. (same on same server)
     log_dir: "/gemini-deploy/log"
     # Storage directory for cluster deployment files, startup scripts, and configuration files. (same on same server)
-    deploy_dir: "/gemini-deploy/${version}"
+    deploy_dir: "/gemini-deploy"
   - host: 10.0.1.13
     # SSH port of the server. (same on same server)
     ssh_port: 22
@@ -71,7 +71,7 @@ ts-meta:
     # openGemini Cluster log file storage directory. (same on same server)
     log_dir: "/gemini-deploy/log"
     # Storage directory for cluster deployment files, startup scripts, and configuration files. (same on same server)
-    deploy_dir: "/gemini-deploy/${version}"
+    deploy_dir: "/gemini-deploy"
 
 # Server configs are used to specify the configuration of ts-sql Servers.
 ts-sql:
@@ -86,7 +86,7 @@ ts-sql:
     # openGemini Cluster log file storage directory. (same on same server)
     log_dir: "/gemini-deploy/log"
     # Storage directory for cluster deployment files, startup scripts, and configuration files. (same on same server)
-    deploy_dir: "/gemini-deploy/${version}"
+    deploy_dir: "/gemini-deploy"
   - host: 10.0.1.15
     # SSH port of the server. (same on same server)
     ssh_port: 22
@@ -97,7 +97,7 @@ ts-sql:
     # openGemini Cluster log file storage directory. (same on same server)
     log_dir: "/gemini-deploy/log"
     # Storage directory for cluster deployment files, startup scripts, and configuration files. (same on same server)
-    deploy_dir: "/gemini-deploy/${version}"
+    deploy_dir: "/gemini-deploy"
   - host: 10.0.1.16
     # SSH port of the server. (same on same server)
     ssh_port: 22
@@ -108,7 +108,7 @@ ts-sql:
     # openGemini Cluster log file storage directory. (same on same server)
     log_dir: "/gemini-deploy/log"
     # Storage directory for cluster deployment files, startup scripts, and configuration files. (same on same server)
-    deploy_dir: "/gemini-deploy/${version}"
+    deploy_dir: "/gemini-deploy"
 
 # Server configs are used to specify the configuration of ts-store Servers.
 ts-store:
@@ -129,7 +129,7 @@ ts-store:
     # openGemini Cluster log file storage directory. (same on same server)
     log_dir: "/gemini-deploy/log"
     # Storage directory for cluster deployment files, startup scripts, and configuration files. (same on same server)
-    deploy_dir: "/gemini-deploy/${version}"
+    deploy_dir: "/gemini-deploy"
   - host: 10.0.1.18
     # SSH port of the server. (same on same server)
     ssh_port: 22
@@ -146,7 +146,7 @@ ts-store:
     # openGemini Cluster log file storage directory. (same on same server)
     log_dir: "/gemini-deploy/log"
     # Storage directory for cluster deployment files, startup scripts, and configuration files. (same on same server)
-    deploy_dir: "/gemini-deploy/${version}"
+    deploy_dir: "/gemini-deploy"
   - host: 10.0.1.19
     # SSH port of the server. (same on same server)
     ssh_port: 22
@@ -163,4 +163,4 @@ ts-store:
     # openGemini Cluster log file storage directory. (same on same server)
     log_dir: "/gemini-deploy/log"
     # Storage directory for cluster deployment files, startup scripts, and configuration files. (same on same server)
-    deploy_dir: "/gemini-deploy/${version}"
+    deploy_dir: "/gemini-deploy"

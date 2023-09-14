@@ -4,7 +4,7 @@ global:
   ssh_port: 22
   base_data_dir: "/gemini-data"
   log_dir: "/gemini-deploy/logs"
-  deploy_dir: "/gemini-deploy/${version}"
+  deploy_dir: "/gemini-deploy"
   os: "linux" 
   arch: "amd64"
 
