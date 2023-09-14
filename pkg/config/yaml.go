@@ -32,7 +32,7 @@ type MetaYaml struct {
 	LogDir    string `yaml:"log_dir"`
 	DeployDir string `yaml:"deploy_dir"`
 
-	// default value in const
+	// do not need default value
 	ClientPort int    `yaml:"client_port"`
 	PeerPort   int    `yaml:"peer_port"`
 	RaftPort   int    `yaml:"raft_port"`
@@ -47,7 +47,7 @@ type SqlYaml struct {
 	LogDir    string `yaml:"log_dir"`
 	DeployDir string `yaml:"deploy_dir"`
 
-	// default value in const
+	// do not need default value
 	Port       int `yaml:"port"`
 	FlightPort int `yaml:"flight_port"`
 }
@@ -59,12 +59,48 @@ type StoreYaml struct {
 	LogDir    string `yaml:"log_dir"`
 	DeployDir string `yaml:"deploy_dir"`
 
-	// default value in const
+	// do not need default value
 	IngestPort int    `yaml:"ingest_port"`
 	SelectPort int    `yaml:"select_port"`
 	GossipPort int    `yaml:"gossip_port"`
 	DataDir    string `yaml:"data_dir"`
 	MetaDir    string `yaml:"meta_dir"`
+}
+
+func updataWithDefaults(y *Yaml) {
+	for i := range y.TsMeta {
+		if y.TsMeta[i].SSHPort == 0 {
+			y.TsMeta[i].SSHPort = y.Global.SSHPort
+		}
+		if y.TsMeta[i].LogDir == "" {
+			y.TsMeta[i].LogDir = y.Global.LogDir
+		}
+		if y.TsMeta[i].DeployDir == "" {
+			y.TsMeta[i].DeployDir = y.Global.DeployDir
+		}
+	}
+	for i := range y.TsSql {
+		if y.TsSql[i].SSHPort == 0 {
+			y.TsSql[i].SSHPort = y.Global.SSHPort
+		}
+		if y.TsSql[i].LogDir == "" {
+			y.TsSql[i].LogDir = y.Global.LogDir
+		}
+		if y.TsSql[i].DeployDir == "" {
+			y.TsSql[i].DeployDir = y.Global.DeployDir
+		}
+	}
+	for i := range y.TsStore {
+		if y.TsStore[i].SSHPort == 0 {
+			y.TsStore[i].SSHPort = y.Global.SSHPort
+		}
+		if y.TsStore[i].LogDir == "" {
+			y.TsStore[i].LogDir = y.Global.LogDir
+		}
+		if y.TsStore[i].DeployDir == "" {
+			y.TsStore[i].DeployDir = y.Global.DeployDir
+		}
+	}
 }
 
 func ReadFromYaml(yamlPath string) (Yaml, error) {
@@ -77,5 +113,9 @@ func ReadFromYaml(yamlPath string) (Yaml, error) {
 	if err = yaml.Unmarshal(yamlFile, &y); err != nil {
 		return Yaml{}, err
 	}
+
+	// Update with default values
+	updataWithDefaults(&y)
+
 	return y, nil
 }

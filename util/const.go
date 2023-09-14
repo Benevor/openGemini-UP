@@ -65,22 +65,22 @@ const (
 )
 
 // yaml default values
-const (
-	// ts-meta
-	Meta_client_port = 8091
-	Meta_peer_port   = 8092
-	Meta_raft_port   = 8088
-	Meta_gossip_port = 8010
-	Meta_data_dir    = "/gemini-data/meta"
+// const (
+// 	// ts-meta
+// 	Meta_client_port = 8091
+// 	Meta_peer_port   = 8092
+// 	Meta_raft_port   = 8088
+// 	Meta_gossip_port = 8010
+// 	Meta_data_dir    = "/gemini-data/meta"
 
-	// te-sql
-	Sql_port        = 8086
-	Sql_flight_port = 8087
+// 	// te-sql
+// 	Sql_port        = 8086
+// 	Sql_flight_port = 8087
 
-	// ts-store
-	Store_ingest_port    = 8400
-	Store_select_port    = 8401
-	Store_gossip_port    = 8011
-	Store_store_data_dir = "/gemini-data/data"
-	Store_meta_dir       = "/gemini-data/data/meta"
-)
+// 	// ts-store
+// 	Store_ingest_port    = 8400
+// 	Store_select_port    = 8401
+// 	Store_gossip_port    = 8011
+// 	Store_store_data_dir = "/gemini-data/data"
+// 	Store_meta_dir       = "/gemini-data/data/meta"
+// )
