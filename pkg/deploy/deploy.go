@@ -142,6 +142,7 @@ func (d *GeminiDeployer) prepareRemotes(c *config.Config, needSftp bool) error {
 			KeyPath:    ssh.KeyPath,
 			Typ:        typ,
 			UpDataPath: ssh.UpDataPath,
+			LogPath:    ssh.LogPath,
 		}
 	}
 
@@ -224,7 +225,7 @@ func (d *GeminiDeployer) prepareForUpload() error {
 
 func (d *GeminiDeployer) prepareUploadActions(c *config.Config) error {
 	// ts-meta
-	for host := range c.SSHConfig {
+	for _, host := range c.CommonConfig.MetaHosts {
 		if d.uploads[host] == nil {
 			d.uploads[host] = &UploadAction{
 				remoteHost: d.remotes[host],
@@ -238,7 +239,7 @@ func (d *GeminiDeployer) prepareUploadActions(c *config.Config) error {
 	}
 
 	// ts-sql
-	for host := range c.SSHConfig {
+	for _, host := range c.CommonConfig.SqlHosts {
 		if d.uploads[host] == nil {
 			d.uploads[host] = &UploadAction{
 				remoteHost: d.remotes[host],
@@ -252,7 +253,7 @@ func (d *GeminiDeployer) prepareUploadActions(c *config.Config) error {
 	}
 
 	// ts-store
-	for host := range c.SSHConfig {
+	for _, host := range c.CommonConfig.StoreHosts {
 		if d.uploads[host] == nil {
 			d.uploads[host] = &UploadAction{
 				remoteHost: d.remotes[host],
@@ -291,15 +292,15 @@ func (d *GeminiDeployer) prepareUploadActions(c *config.Config) error {
 func (d *GeminiDeployer) prepareRunActions(c *config.Config) error {
 	// ts-meta
 	i := 1
-	for host := range c.SSHConfig {
+	for _, host := range c.CommonConfig.MetaHosts {
 		d.runs.MetaAction = append(d.runs.MetaAction, &exec.RunAction{
 			Info: &exec.RunInfo{
 				ScriptPath: filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_etc_rel_path, util.Install_Script),
-				Args: []string{util.TS_META, util.OpenGemini_path,
+				Args: []string{util.TS_META, d.remotes[host].LogPath,
 					filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_bin_rel_path, util.TS_META),
 					filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_etc_rel_path, host+util.Remote_conf_suffix),
-					filepath.Join(util.OpenGemini_path, util.Remote_pid_path, util.META+strconv.Itoa(i)+util.Remote_pid_suffix),
-					filepath.Join(util.OpenGemini_path, util.Remote_log_path, strconv.Itoa(i), util.META_extra_log+strconv.Itoa(i)+util.Remote_log_suffix),
+					filepath.Join(d.remotes[host].LogPath, util.Remote_pid_path, util.META+strconv.Itoa(i)+util.Remote_pid_suffix),
+					filepath.Join(d.remotes[host].LogPath, strconv.Itoa(i), util.META_extra_log+strconv.Itoa(i)+util.Remote_log_suffix),
 					strconv.Itoa(i)},
 			},
 			Remote: d.remotes[host],
@@ -309,15 +310,15 @@ func (d *GeminiDeployer) prepareRunActions(c *config.Config) error {
 
 	// ts-sql
 	i = 1
-	for host := range c.SSHConfig {
+	for _, host := range c.CommonConfig.SqlHosts {
 		d.runs.SqlAction = append(d.runs.SqlAction, &exec.RunAction{
 			Info: &exec.RunInfo{
 				ScriptPath: filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_etc_rel_path, util.Install_Script),
-				Args: []string{util.TS_SQL, util.OpenGemini_path,
+				Args: []string{util.TS_SQL, d.remotes[host].LogPath,
 					filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_bin_rel_path, util.TS_SQL),
 					filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_etc_rel_path, host+util.Remote_conf_suffix),
-					filepath.Join(util.OpenGemini_path, util.Remote_pid_path, util.SQL+strconv.Itoa(i)+util.Remote_pid_suffix),
-					filepath.Join(util.OpenGemini_path, util.Remote_log_path, strconv.Itoa(i), util.SQL_extra_log+strconv.Itoa(i)+util.Remote_log_suffix),
+					filepath.Join(d.remotes[host].LogPath, util.Remote_pid_path, util.SQL+strconv.Itoa(i)+util.Remote_pid_suffix),
+					filepath.Join(d.remotes[host].LogPath, strconv.Itoa(i), util.SQL_extra_log+strconv.Itoa(i)+util.Remote_log_suffix),
 					strconv.Itoa(i)},
 			},
 			Remote: d.remotes[host],
@@ -327,15 +328,15 @@ func (d *GeminiDeployer) prepareRunActions(c *config.Config) error {
 
 	// ts-store
 	i = 1
-	for host := range c.SSHConfig {
+	for _, host := range c.CommonConfig.StoreHosts {
 		d.runs.StoreAction = append(d.runs.StoreAction, &exec.RunAction{
 			Info: &exec.RunInfo{
 				ScriptPath: filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_etc_rel_path, util.Install_Script),
-				Args: []string{util.TS_STORE, util.OpenGemini_path,
+				Args: []string{util.TS_STORE, d.remotes[host].LogPath,
 					filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_bin_rel_path, util.TS_STORE),
 					filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_etc_rel_path, host+util.Remote_conf_suffix),
-					filepath.Join(util.OpenGemini_path, util.Remote_pid_path, util.STORE+strconv.Itoa(i)+util.Remote_pid_suffix),
-					filepath.Join(util.OpenGemini_path, util.Remote_log_path, strconv.Itoa(i), util.STORE_extra_log+strconv.Itoa(i)+util.Remote_log_suffix),
+					filepath.Join(d.remotes[host].LogPath, util.Remote_pid_path, util.STORE+strconv.Itoa(i)+util.Remote_pid_suffix),
+					filepath.Join(d.remotes[host].LogPath, strconv.Itoa(i), util.STORE_extra_log+strconv.Itoa(i)+util.Remote_log_suffix),
 					strconv.Itoa(i)},
 			},
 			Remote: d.remotes[host],

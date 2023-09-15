@@ -10,6 +10,7 @@ type SSHConfig struct {
 	// get from yaml
 	Port       int
 	UpDataPath string
+	LogPath    string
 
 	User     string
 	Typ      string
@@ -94,6 +95,9 @@ func (c *GeminiConfigurator) buildFromYaml(y Yaml) {
 		if meta.DeployDir != "" {
 			ssh.UpDataPath = meta.DeployDir
 		}
+		if meta.LogDir != "" {
+			ssh.LogPath = meta.LogDir
+		}
 		c.conf.SSHConfig[meta.Host] = ssh
 
 		c.conf.CommonConfig.MetaHosts = append(c.conf.CommonConfig.MetaHosts, meta.Host)
@@ -113,6 +117,9 @@ func (c *GeminiConfigurator) buildFromYaml(y Yaml) {
 		if sql.DeployDir != "" {
 			ssh.UpDataPath = sql.DeployDir
 		}
+		if sql.LogDir != "" {
+			ssh.LogPath = sql.LogDir
+		}
 		c.conf.SSHConfig[sql.Host] = ssh
 
 		c.conf.CommonConfig.SqlHosts = append(c.conf.CommonConfig.SqlHosts, sql.Host)
@@ -131,6 +138,9 @@ func (c *GeminiConfigurator) buildFromYaml(y Yaml) {
 		}
 		if store.DeployDir != "" {
 			ssh.UpDataPath = store.DeployDir
+		}
+		if store.LogDir != "" {
+			ssh.LogPath = store.LogDir
 		}
 		c.conf.SSHConfig[store.Host] = ssh
 

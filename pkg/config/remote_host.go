@@ -17,6 +17,7 @@ type RemoteHost struct {
 	KeyPath    string
 	Typ        SSHType
 	UpDataPath string
+	LogPath    string
 }
 
 type UploadInfo struct {
