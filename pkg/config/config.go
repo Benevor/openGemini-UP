@@ -7,12 +7,14 @@ type CommonConfig struct {
 }
 
 type SSHConfig struct {
+	// get from yaml
 	Port       int
-	User       string
-	Typ        string
-	Password   string
-	KeyPath    string
 	UpDataPath string
+
+	User     string
+	Typ      string
+	Password string
+	KeyPath  string
 }
 
 type Config struct {
@@ -80,7 +82,11 @@ func (c *GeminiConfigurator) buildFromYaml(y Yaml) {
 	for _, meta := range y.TsMeta {
 		ssh, ok := c.conf.SSHConfig[meta.Host]
 		if !ok {
-			ssh = SSHConfig{}
+			ssh = SSHConfig{
+				User:    "liujibo",
+				Typ:     "SSH_KEY",
+				KeyPath: "/Users/liujibo/.ssh/id_rsa",
+			}
 		}
 		if meta.SSHPort != 0 {
 			ssh.Port = meta.SSHPort
@@ -95,7 +101,11 @@ func (c *GeminiConfigurator) buildFromYaml(y Yaml) {
 	for _, sql := range y.TsSql {
 		ssh, ok := c.conf.SSHConfig[sql.Host]
 		if !ok {
-			ssh = SSHConfig{}
+			ssh = SSHConfig{
+				User:    "liujibo",
+				Typ:     "SSH_KEY",
+				KeyPath: "/Users/liujibo/.ssh/id_rsa",
+			}
 		}
 		if sql.SSHPort != 0 {
 			ssh.Port = sql.SSHPort
@@ -110,7 +120,11 @@ func (c *GeminiConfigurator) buildFromYaml(y Yaml) {
 	for _, store := range y.TsStore {
 		ssh, ok := c.conf.SSHConfig[store.Host]
 		if !ok {
-			ssh = SSHConfig{}
+			ssh = SSHConfig{
+				User:    "liujibo",
+				Typ:     "SSH_KEY",
+				KeyPath: "/Users/liujibo/.ssh/id_rsa",
+			}
 		}
 		if store.SSHPort != 0 {
 			ssh.Port = store.SSHPort

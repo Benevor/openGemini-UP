@@ -42,6 +42,7 @@ func NewGeminiStop(delete bool) Stop {
 		sshClients:   make(map[string]*ssh.Client),
 		configurator: config.NewGeminiConfigurator(util.User_conf_path, "", "", ""),
 		needDelete:   delete,
+		upDataPath:   make(map[string]string),
 	}
 	return new
 }
@@ -175,7 +176,7 @@ func (s *GeminiStop) Run() error {
 		for ip := range s.stops {
 			go func(ip string) {
 				defer s.wg.Done()
-				command := fmt.Sprintf("rm -rf %s; rm -rf %s;", s.upDataPath, util.OpenGemini_path)
+				command := fmt.Sprintf("rm -rf %s;", s.upDataPath[ip])
 				s.executor.ExecCommand(ip, command)
 			}(ip)
 		}

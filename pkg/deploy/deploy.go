@@ -177,11 +177,31 @@ func (d *GeminiDeployer) tryConnect(needSftp bool) error {
 			}
 			d.sftpClients[ip] = sftpClient
 
+			pwd, _ := sftpClient.Getwd()
 			// Convert relative paths to absolute paths.
 			if r.UpDataPath[:1] == "~" {
-				pwd, _ := sftpClient.Getwd()
 				r.UpDataPath = filepath.Join(pwd, r.UpDataPath[1:])
 			}
+
+			// Convert relative paths in openGemini.conf to absolute paths.
+			confPath := filepath.Join(util.Download_dst, util.Local_etc_rel_path, r.Ip+util.Remote_conf_suffix)
+			hostToml, _ := config.ReadFromToml(confPath)
+			if hostToml.Meta.Dir[:1] == "~" {
+				hostToml.Meta.Dir = filepath.Join(pwd, hostToml.Meta.Dir[1:])
+			}
+			if hostToml.Data.StoreDataDir[:1] == "~" {
+				hostToml.Data.StoreDataDir = filepath.Join(pwd, hostToml.Data.StoreDataDir[1:])
+			}
+			if hostToml.Data.StoreWalDir[:1] == "~" {
+				hostToml.Data.StoreWalDir = filepath.Join(pwd, hostToml.Data.StoreWalDir[1:])
+			}
+			if hostToml.Data.StoreMetaDir[:1] == "~" {
+				hostToml.Data.StoreMetaDir = filepath.Join(pwd, hostToml.Data.StoreMetaDir[1:])
+			}
+			if hostToml.Logging.Path[:1] == "~" {
+				hostToml.Logging.Path = filepath.Join(pwd, hostToml.Logging.Path[1:])
+			}
+			config.GenNewToml(hostToml, confPath)
 		}
 	}
 	return nil

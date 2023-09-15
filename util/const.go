@@ -23,7 +23,8 @@ const (
 
 // config
 const (
-	User_conf_path      = "./topology.example.yaml"
+	User_conf_path = "./test.yaml"
+	// User_conf_path      = "./topology.example.yaml"
 	Install_script_path = "./scripts/install.sh"
 	Remote_conf_suffix  = "-openGemini.conf"
 	SSH_KEY             = "SSH_KEY"
