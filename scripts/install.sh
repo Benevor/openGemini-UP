@@ -26,7 +26,7 @@ pid=$(pgrep $bin_name)
 
 sleep 3
 
-rm -rf $opengemini_log_path
+# rm -rf $opengemini_log_path
 mkdir -p $opengemini_log_path/$index
 
 nohup $bin_file -config $conf_file -pidfile $pid_file> $extra_file 2>&1 &
