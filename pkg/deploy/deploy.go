@@ -17,6 +17,14 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+type ClusterOptions struct {
+	Version      string
+	User         string
+	IdentityFile string
+	Password     string
+	SshType      config.SSHType
+}
+
 type UploadAction struct {
 	uploadInfo []*config.UploadInfo
 	remoteHost *config.RemoteHost
@@ -45,19 +53,22 @@ type GeminiDeployer struct {
 	downloader   download.Downloader // download files from internet
 	executor     exec.Executor       // execute commands on remote host
 
+	clusterOptions ClusterOptions
+
 	wg sync.WaitGroup
 }
 
-func NewGeminiDeployer(v string) Deployer {
+func NewGeminiDeployer(ops ClusterOptions) Deployer {
 	return &GeminiDeployer{
-		remotes:      make(map[string]*config.RemoteHost),
-		uploads:      make(map[string]*UploadAction),
-		sshClients:   make(map[string]*ssh.Client),
-		sftpClients:  make(map[string]*sftp.Client),
-		version:      v,
-		configurator: config.NewGeminiConfigurator(util.User_conf_path, filepath.Join(util.Download_dst, v, util.Local_etc_rel_path, util.Local_conf_name), filepath.Join(util.Download_dst, util.Local_etc_rel_path), v),
-		downloader:   download.NewGeminiDownloader(v),
-		runs:         &exec.RunActions{},
+		remotes:        make(map[string]*config.RemoteHost),
+		uploads:        make(map[string]*UploadAction),
+		sshClients:     make(map[string]*ssh.Client),
+		sftpClients:    make(map[string]*sftp.Client),
+		version:        ops.Version,
+		configurator:   config.NewGeminiConfigurator(util.User_conf_path, filepath.Join(util.Download_dst, ops.Version, util.Local_etc_rel_path, util.Local_conf_name), filepath.Join(util.Download_dst, util.Local_etc_rel_path), ops.Version),
+		downloader:     download.NewGeminiDownloader(ops.Version),
+		runs:           &exec.RunActions{},
+		clusterOptions: ops,
 	}
 }
 
@@ -125,24 +136,15 @@ func (d *GeminiDeployer) prepareRemotes(c *config.Config, needSftp bool) error {
 	}
 
 	for ip, ssh := range c.SSHConfig {
-		var typ config.SSHType
-		switch ssh.Typ {
-		case util.SSH_KEY:
-			typ = config.SSH_KEY
-		case util.SSH_PW:
-			typ = config.SSH_PW
-		default:
-			return util.UnknowSSHType
-		}
 		d.remotes[ip] = &config.RemoteHost{
 			Ip:         ip,
 			SSHPort:    ssh.Port,
-			User:       ssh.User,
-			Password:   ssh.Password,
-			KeyPath:    ssh.KeyPath,
-			Typ:        typ,
 			UpDataPath: ssh.UpDataPath,
 			LogPath:    ssh.LogPath,
+			User:       d.clusterOptions.User,
+			Typ:        d.clusterOptions.SshType,
+			Password:   d.clusterOptions.Password,
+			KeyPath:    d.clusterOptions.IdentityFile,
 		}
 	}
 

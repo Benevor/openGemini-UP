@@ -3,6 +3,7 @@ package stop
 import (
 	"fmt"
 	"openGemini-UP/pkg/config"
+	"openGemini-UP/pkg/deploy"
 	"openGemini-UP/pkg/exec"
 	"openGemini-UP/util"
 	"sync"
@@ -33,16 +34,19 @@ type GeminiStop struct {
 	upDataPath map[string]string // ip->up path
 
 	wg sync.WaitGroup
+
+	clusterOptions deploy.ClusterOptions
 }
 
-func NewGeminiStop(delete bool) Stop {
+func NewGeminiStop(ops deploy.ClusterOptions, delete bool) Stop {
 	new := &GeminiStop{
-		remotes:      make(map[string]*config.RemoteHost),
-		stops:        make(map[string]*exec.StopAction),
-		sshClients:   make(map[string]*ssh.Client),
-		configurator: config.NewGeminiConfigurator(util.User_conf_path, "", "", ""),
-		needDelete:   delete,
-		upDataPath:   make(map[string]string),
+		remotes:        make(map[string]*config.RemoteHost),
+		stops:          make(map[string]*exec.StopAction),
+		sshClients:     make(map[string]*ssh.Client),
+		configurator:   config.NewGeminiConfigurator(util.User_conf_path, "", "", ""),
+		needDelete:     delete,
+		upDataPath:     make(map[string]string),
+		clusterOptions: ops,
 	}
 	return new
 }
@@ -74,21 +78,13 @@ func (s *GeminiStop) prepareRemotes(c *config.Config) error {
 
 	for ip, ssh := range c.SSHConfig {
 		var typ config.SSHType
-		switch ssh.Typ {
-		case util.SSH_KEY:
-			typ = config.SSH_KEY
-		case util.SSH_PW:
-			typ = config.SSH_PW
-		default:
-			return util.UnknowSSHType
-		}
 
 		s.remotes[ip] = &config.RemoteHost{
 			Ip:       ip,
 			SSHPort:  ssh.Port,
-			User:     ssh.User,
-			Password: ssh.Password,
-			KeyPath:  ssh.KeyPath,
+			User:     s.clusterOptions.User,
+			Password: s.clusterOptions.Password,
+			KeyPath:  s.clusterOptions.IdentityFile,
 			Typ:      typ,
 		}
 

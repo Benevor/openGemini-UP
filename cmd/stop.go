@@ -17,8 +17,15 @@ var stopCmd = &cobra.Command{
 	Long:  `Stop an openGemini cluster based on configuration files.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("--------------- Cluster stopping! ---------------")
+
+		ops, err := getClusterOptions(cmd)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
 		// stop all services
-		stop := stop.NewGeminiStop(false)
+		stop := stop.NewGeminiStop(ops, false)
 		defer stop.Close()
 
 		if err := stop.Prepare(); err != nil {
