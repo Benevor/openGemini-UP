@@ -50,7 +50,6 @@ type GeminiDeployer struct {
 	sftpClients map[string]*sftp.Client
 
 	configurator config.Configurator // conf reader
-	downloader   download.Downloader // download files from internet
 	executor     exec.Executor       // execute commands on remote host
 
 	clusterOptions ClusterOptions
@@ -66,7 +65,6 @@ func NewGeminiDeployer(ops ClusterOptions) Deployer {
 		sftpClients:    make(map[string]*sftp.Client),
 		version:        ops.Version,
 		configurator:   config.NewGeminiConfigurator(util.User_conf_path, filepath.Join(util.Download_dst, ops.Version, util.Local_etc_rel_path, util.Local_conf_name), filepath.Join(util.Download_dst, util.Local_etc_rel_path), ops.Version),
-		downloader:     download.NewGeminiDownloader(ops.Version),
 		runs:           &exec.RunActions{},
 		clusterOptions: ops,
 	}
@@ -74,14 +72,20 @@ func NewGeminiDeployer(ops ClusterOptions) Deployer {
 
 func (d *GeminiDeployer) PrepareForDeploy() error {
 	var err error
-	if err = d.downloader.Run(); err != nil {
-		return err
-	}
-
 	if err = d.configurator.Run(); err != nil {
 		return err
 	}
 	conf := d.configurator.GetConfig()
+
+	dOps := download.DownloadOptions{
+		Version: d.version,
+		Os:      conf.CommonConfig.Os,
+		Arch:    conf.CommonConfig.Arch,
+	}
+	downloader := download.NewGeminiDownloader(dOps)
+	if err = downloader.Run(); err != nil {
+		return err
+	}
 
 	if err = d.prepareRemotes(conf, true); err != nil {
 		return err

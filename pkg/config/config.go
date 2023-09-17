@@ -4,6 +4,8 @@ type CommonConfig struct {
 	MetaHosts  []string //IPs
 	StoreHosts []string
 	SqlHosts   []string
+	Os         string
+	Arch       string
 }
 
 type SSHConfig struct {
@@ -75,6 +77,9 @@ func (c *GeminiConfigurator) GetConfig() *Config {
 }
 
 func (c *GeminiConfigurator) buildFromYaml(y Yaml) {
+	c.conf.CommonConfig.Os = y.Global.OS
+	c.conf.CommonConfig.Arch = y.Global.Arch
+
 	for _, meta := range y.TsMeta {
 		ssh, ok := c.conf.SSHConfig[meta.Host]
 		if !ok {

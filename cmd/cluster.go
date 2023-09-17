@@ -27,7 +27,7 @@ func init() {
 func getClusterOptions(cmd *cobra.Command) (deploy.ClusterOptions, error) {
 	var ops deploy.ClusterOptions
 	if version, _ := cmd.Flags().GetString("version"); version == "" {
-		ops.Version = util.Download_version
+		ops.Version = util.Download_default_version
 	} else {
 		ops.Version = version
 	}
