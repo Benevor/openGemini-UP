@@ -18,11 +18,8 @@ type GlobalYaml struct {
 	LogDir    string `yaml:"log_dir"`
 	DeployDir string `yaml:"deploy_dir"`
 
-	User        string `yaml:"user"`
-	Group       string `yaml:"group"`
-	BaseDataDir string `yaml:"base_data_dir"`
-	OS          string `yaml:"os"`
-	Arch        string `yaml:"arch"`
+	OS   string `yaml:"os"`
+	Arch string `yaml:"arch"`
 }
 
 type MetaYaml struct {
