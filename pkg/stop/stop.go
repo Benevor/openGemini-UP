@@ -43,7 +43,7 @@ func NewGeminiStop(ops deploy.ClusterOptions, delete bool) Stop {
 		remotes:        make(map[string]*config.RemoteHost),
 		stops:          make(map[string]*exec.StopAction),
 		sshClients:     make(map[string]*ssh.Client),
-		configurator:   config.NewGeminiConfigurator(util.User_conf_path, "", "", ""),
+		configurator:   config.NewGeminiConfigurator(ops.YamlPath, "", "", ""),
 		needDelete:     delete,
 		upDataPath:     make(map[string]string),
 		clusterOptions: ops,

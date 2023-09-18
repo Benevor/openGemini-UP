@@ -23,6 +23,7 @@ type ClusterOptions struct {
 	IdentityFile string
 	Password     string
 	SshType      config.SSHType
+	YamlPath     string
 }
 
 type UploadAction struct {
@@ -64,7 +65,7 @@ func NewGeminiDeployer(ops ClusterOptions) Deployer {
 		sshClients:     make(map[string]*ssh.Client),
 		sftpClients:    make(map[string]*sftp.Client),
 		version:        ops.Version,
-		configurator:   config.NewGeminiConfigurator(util.User_conf_path, filepath.Join(util.Download_dst, ops.Version, util.Local_etc_rel_path, util.Local_conf_name), filepath.Join(util.Download_dst, util.Local_etc_rel_path), ops.Version),
+		configurator:   config.NewGeminiConfigurator(ops.YamlPath, filepath.Join(util.Download_dst, ops.Version, util.Local_etc_rel_path, util.Local_conf_name), filepath.Join(util.Download_dst, util.Local_etc_rel_path), ops.Version),
 		runs:           &exec.RunActions{},
 		clusterOptions: ops,
 	}

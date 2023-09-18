@@ -49,5 +49,11 @@ func getClusterOptions(cmd *cobra.Command) (deploy.ClusterOptions, error) {
 			ops.SshType = config.SSH_PW
 		}
 	}
+
+	if yPath, _ := cmd.Flags().GetString("yaml"); yPath == "" {
+		return ops, fmt.Errorf("the path of cluster configuration file must be specified")
+	} else {
+		ops.YamlPath = yPath
+	}
 	return ops, nil
 }

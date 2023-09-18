@@ -52,4 +52,5 @@ var upgradeCmd = &cobra.Command{
 func init() {
 	clusterCmd.AddCommand(upgradeCmd)
 	upgradeCmd.Flags().StringP("version", "v", "", "component name")
+	upgradeCmd.Flags().StringP("yaml", "y", "", "The path to cluster configuration yaml file")
 }

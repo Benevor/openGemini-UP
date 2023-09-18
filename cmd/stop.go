@@ -41,4 +41,5 @@ var stopCmd = &cobra.Command{
 
 func init() {
 	clusterCmd.AddCommand(stopCmd)
+	stopCmd.Flags().StringP("yaml", "y", "", "The path to cluster configuration yaml file")
 }

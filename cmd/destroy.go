@@ -41,4 +41,5 @@ var destroyCmd = &cobra.Command{
 
 func init() {
 	clusterCmd.AddCommand(destroyCmd)
+	destroyCmd.Flags().StringP("yaml", "y", "", "The path to cluster configuration yaml file")
 }
