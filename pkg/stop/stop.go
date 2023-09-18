@@ -84,7 +84,7 @@ func (s *GeminiStop) prepareRemotes(c *config.Config) error {
 			SSHPort:  ssh.Port,
 			User:     s.clusterOptions.User,
 			Password: s.clusterOptions.Password,
-			KeyPath:  s.clusterOptions.IdentityFile,
+			KeyPath:  s.clusterOptions.Key,
 			Typ:      typ,
 		}
 

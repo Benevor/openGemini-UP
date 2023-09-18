@@ -37,13 +37,13 @@ func getClusterOptions(cmd *cobra.Command) (deploy.ClusterOptions, error) {
 		ops.User = user
 	}
 	password, _ := cmd.Flags().GetString("password")
-	identity_file, _ := cmd.Flags().GetString("identity_file")
-	if password == "" && identity_file == "" || password != "" && identity_file != "" {
-		return ops, fmt.Errorf("the password and identity_file need one and only one")
+	key, _ := cmd.Flags().GetString("key")
+	if password == "" && key == "" || password != "" && key != "" {
+		return ops, fmt.Errorf("the password and key need one and only one")
 	} else {
-		ops.IdentityFile = identity_file
+		ops.Key = key
 		ops.Password = password
-		if identity_file != "" {
+		if key != "" {
 			ops.SshType = config.SSH_KEY
 		} else {
 			ops.SshType = config.SSH_PW

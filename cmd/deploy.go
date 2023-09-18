@@ -43,6 +43,6 @@ func init() {
 	deployCmd.Flags().StringP("version", "v", "", "component name")
 	deployCmd.Flags().StringP("yaml", "y", "", "The path to cluster configuration yaml file")
 	deployCmd.Flags().StringP("user", "u", "", "The user name to login via SSH. The user must has root (or sudo) privilege.")
-	deployCmd.Flags().StringP("identity_file", "i", "", "The path of the SSH identity file. If specified, public key authentication will be used.")
+	deployCmd.Flags().StringP("key", "k", "", "The path of the SSH identity file. If specified, public key authentication will be used.")
 	deployCmd.Flags().StringP("password", "p", "", "The password of target hosts. If specified, password authentication will be used.")
 }

@@ -29,11 +29,11 @@ The following table describes the subcommands of the `cluster` command.
 
 | command | description | parameter | example |
 | --- | --- | --- | --- |
-| `deploy` | deploy an openGemini cluster| --version<br />--yaml<br />--user<br />--identity_file<br />--password | `./openGemini-UP cluster deploy --version v1.0.0 --yaml ./topology.example.yaml --user root --identity_file ~/.ssh/id_rsa` |
-| `stop` | stop an openGemini cluster | --yaml<br />--user<br />--identity_file<br />--password | `./openGemini-UP cluster stop --yaml ./topology.example.yaml --user root --password xxxxxx` |
-| `start` | start an openGemini cluster which is stopped | --yaml<br />--user<br />--identity_file<br />--password | `./openGemini-UP cluster start --yaml ./topology.example.yaml --user root --password xxxxxx` |
-| `destroy` | destroy an openGemini cluster which means stopping services and clearing data| --yaml<br />--user<br />--identity_file<br />--password | `./openGemini-UP cluster destroy --yaml ./topology.example.yaml --user root --password xxxxxx` |
-| `upgrade` | upgrade an openGemini cluster to the specified version | --version<br />--yaml<br />--user<br />--identity_file<br />--password | `./openGemini-UP cluster upgrade --version v1.0.0 --yaml ./topology.example.yaml --user root --password xxxxxx` |
+| `deploy` | deploy an openGemini cluster| --version<br />--yaml<br />--user<br />--key<br />--password | `./openGemini-UP cluster deploy --version v1.0.0 --yaml ./topology.example.yaml --user root --key ~/.ssh/id_rsa` |
+| `stop` | stop an openGemini cluster | --yaml<br />--user<br />--key<br />--password | `./openGemini-UP cluster stop --yaml ./topology.example.yaml --user root --password xxxxxx` |
+| `start` | start an openGemini cluster which is stopped | --yaml<br />--user<br />--key<br />--password | `./openGemini-UP cluster start --yaml ./topology.example.yaml --user root --password xxxxxx` |
+| `destroy` | destroy an openGemini cluster which means stopping services and clearing data| --yaml<br />--user<br />--key<br />--password | `./openGemini-UP cluster destroy --yaml ./topology.example.yaml --user root --password xxxxxx` |
+| `upgrade` | upgrade an openGemini cluster to the specified version | --version<br />--yaml<br />--user<br />--key<br />--password | `./openGemini-UP cluster upgrade --version v1.0.0 --yaml ./topology.example.yaml --user root --password xxxxxx` |
 
 ## topology.example.yaml
 
@@ -46,7 +46,7 @@ The meaning of each part is as follows:
 * `ts-sql`: Deployment information for `ts-sql`, users can modify some options in `openGemini.conf` here.
 * `ts-store`: Deployment information for `ts-store`, users can modify some options in `openGemini.conf` here.
 
-```toml
+```yaml
 # Global variables are applied to all deployments and used as the default value of
 # the deployments if a specific deployment value is missing.
 global:

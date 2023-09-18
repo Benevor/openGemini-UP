@@ -18,12 +18,12 @@ import (
 )
 
 type ClusterOptions struct {
-	Version      string
-	User         string
-	IdentityFile string
-	Password     string
-	SshType      config.SSHType
-	YamlPath     string
+	Version  string
+	User     string
+	Key      string
+	Password string
+	SshType  config.SSHType
+	YamlPath string
 }
 
 type UploadAction struct {
@@ -149,7 +149,7 @@ func (d *GeminiDeployer) prepareRemotes(c *config.Config, needSftp bool) error {
 			User:       d.clusterOptions.User,
 			Typ:        d.clusterOptions.SshType,
 			Password:   d.clusterOptions.Password,
-			KeyPath:    d.clusterOptions.IdentityFile,
+			KeyPath:    d.clusterOptions.Key,
 		}
 	}
 
