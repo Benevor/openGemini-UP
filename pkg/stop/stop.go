@@ -77,15 +77,13 @@ func (s *GeminiStop) prepareRemotes(c *config.Config) error {
 	}
 
 	for ip, ssh := range c.SSHConfig {
-		var typ config.SSHType
-
 		s.remotes[ip] = &config.RemoteHost{
 			Ip:       ip,
 			SSHPort:  ssh.Port,
 			User:     s.clusterOptions.User,
 			Password: s.clusterOptions.Password,
 			KeyPath:  s.clusterOptions.Key,
-			Typ:      typ,
+			Typ:      s.clusterOptions.SshType,
 		}
 
 		s.upDataPath[ip] = ssh.UpDataPath
