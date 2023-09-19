@@ -1,12 +1,13 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
-package cmd
+package cluster
 
 import (
 	"fmt"
+	"openGemini-UP/cmd"
 	"openGemini-UP/pkg/config"
-	"openGemini-UP/pkg/deploy"
+	"openGemini-UP/pkg/install"
 	"openGemini-UP/util"
 
 	"github.com/spf13/cobra"
@@ -16,16 +17,16 @@ import (
 var clusterCmd = &cobra.Command{
 	Use:   "cluster",
 	Short: "manage cluster",
-	Long:  `Manage openGemini clusters, including deploying, stopping, destroying, monitoring, etc.`,
+	Long:  `Manage openGemini clusters, including install, stop, destroy, monitor, etc.`,
 	Run:   func(cmd *cobra.Command, args []string) {},
 }
 
 func init() {
-	rootCmd.AddCommand(clusterCmd)
+	cmd.RootCmd.AddCommand(clusterCmd)
 }
 
-func getClusterOptions(cmd *cobra.Command) (deploy.ClusterOptions, error) {
-	var ops deploy.ClusterOptions
+func getClusterOptions(cmd *cobra.Command) (install.ClusterOptions, error) {
+	var ops install.ClusterOptions
 	if version, _ := cmd.Flags().GetString("version"); version == "" {
 		ops.Version = util.Download_default_version
 	} else {

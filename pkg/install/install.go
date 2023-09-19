@@ -1,17 +1,13 @@
-package deploy
+package install
 
 import (
 	"fmt"
-	"io/ioutil"
 	"openGemini-UP/pkg/config"
 	"openGemini-UP/pkg/download"
 	"openGemini-UP/pkg/exec"
 	"openGemini-UP/util"
-	"os"
 	"path/filepath"
-	"strconv"
 	"sync"
-	"time"
 
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -31,20 +27,17 @@ type UploadAction struct {
 	remoteHost *config.RemoteHost
 }
 
-type Deployer interface {
-	PrepareForDeploy() error
-	Deploy() error
-	PrepareForStart() error
-	Start() error
+type Installer interface {
+	PrepareForInstall() error
+	Install() error
 	Close()
 }
 
-type GeminiDeployer struct {
+type GeminiInstaller struct {
 	version string
 	// ip -> remotes
 	remotes map[string]*config.RemoteHost
 	uploads map[string]*UploadAction
-	runs    *exec.RunActions
 
 	// ip -> ssh clients
 	sshClients  map[string]*ssh.Client
@@ -58,20 +51,19 @@ type GeminiDeployer struct {
 	wg sync.WaitGroup
 }
 
-func NewGeminiDeployer(ops ClusterOptions) Deployer {
-	return &GeminiDeployer{
+func NewGeminiInstaller(ops ClusterOptions) Installer {
+	return &GeminiInstaller{
 		remotes:        make(map[string]*config.RemoteHost),
 		uploads:        make(map[string]*UploadAction),
 		sshClients:     make(map[string]*ssh.Client),
 		sftpClients:    make(map[string]*sftp.Client),
 		version:        ops.Version,
 		configurator:   config.NewGeminiConfigurator(ops.YamlPath, filepath.Join(util.Download_dst, ops.Version, util.Local_etc_rel_path, util.Local_conf_name), filepath.Join(util.Download_dst, util.Local_etc_rel_path), ops.Version),
-		runs:           &exec.RunActions{},
 		clusterOptions: ops,
 	}
 }
 
-func (d *GeminiDeployer) PrepareForDeploy() error {
+func (d *GeminiInstaller) PrepareForInstall() error {
 	var err error
 	if err = d.configurator.Run(); err != nil {
 		return err
@@ -102,40 +94,10 @@ func (d *GeminiDeployer) PrepareForDeploy() error {
 		return err
 	}
 
-	if err = d.prepareRunActions(conf); err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func (d *GeminiDeployer) PrepareForStart() error {
-	var err error
-	var version string
-	if version, err = d.getVersion(); err != nil {
-		return err
-	}
-	d.version = version
-
-	if err = d.configurator.RunWithoutGen(); err != nil {
-		return err
-	}
-	conf := d.configurator.GetConfig()
-
-	if err = d.prepareRemotes(conf, false); err != nil {
-		return err
-	}
-
-	d.executor = exec.NewGeminiExecutor(d.sshClients)
-
-	if err = d.prepareRunActions(conf); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (d *GeminiDeployer) prepareRemotes(c *config.Config, needSftp bool) error {
+func (d *GeminiInstaller) prepareRemotes(c *config.Config, needSftp bool) error {
 	if c == nil {
 		return util.UnexpectedNil
 	}
@@ -160,7 +122,7 @@ func (d *GeminiDeployer) prepareRemotes(c *config.Config, needSftp bool) error {
 	return nil
 }
 
-func (d *GeminiDeployer) tryConnect(needSftp bool) error {
+func (d *GeminiInstaller) tryConnect(needSftp bool) error {
 	for ip, r := range d.remotes {
 		var err error
 		var sshClient *ssh.Client
@@ -215,7 +177,7 @@ func (d *GeminiDeployer) tryConnect(needSftp bool) error {
 	return nil
 }
 
-func (d *GeminiDeployer) prepareForUpload() error {
+func (d *GeminiInstaller) prepareForUpload() error {
 	if d.executor == nil {
 		return util.UnexpectedNil
 	}
@@ -230,7 +192,7 @@ func (d *GeminiDeployer) prepareForUpload() error {
 	return nil
 }
 
-func (d *GeminiDeployer) prepareUploadActions(c *config.Config) error {
+func (d *GeminiInstaller) prepareUploadActions(c *config.Config) error {
 	// ts-meta
 	for _, host := range c.CommonConfig.MetaHosts {
 		if d.uploads[host] == nil {
@@ -296,102 +258,12 @@ func (d *GeminiDeployer) prepareUploadActions(c *config.Config) error {
 	return nil
 }
 
-func (d *GeminiDeployer) prepareRunActions(c *config.Config) error {
-	// ts-meta
-	i := 1
-	for _, host := range c.CommonConfig.MetaHosts {
-		d.runs.MetaAction = append(d.runs.MetaAction, &exec.RunAction{
-			Info: &exec.RunInfo{
-				ScriptPath: filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_etc_rel_path, util.Install_Script),
-				Args: []string{util.TS_META, d.remotes[host].LogPath,
-					filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_bin_rel_path, util.TS_META),
-					filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_etc_rel_path, host+util.Remote_conf_suffix),
-					filepath.Join(d.remotes[host].LogPath, util.Remote_pid_path, util.META+strconv.Itoa(i)+util.Remote_pid_suffix),
-					filepath.Join(d.remotes[host].LogPath, strconv.Itoa(i), util.META_extra_log+strconv.Itoa(i)+util.Remote_log_suffix),
-					strconv.Itoa(i)},
-			},
-			Remote: d.remotes[host],
-		})
-		i++
-	}
-
-	// ts-sql
-	i = 1
-	for _, host := range c.CommonConfig.SqlHosts {
-		d.runs.SqlAction = append(d.runs.SqlAction, &exec.RunAction{
-			Info: &exec.RunInfo{
-				ScriptPath: filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_etc_rel_path, util.Install_Script),
-				Args: []string{util.TS_SQL, d.remotes[host].LogPath,
-					filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_bin_rel_path, util.TS_SQL),
-					filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_etc_rel_path, host+util.Remote_conf_suffix),
-					filepath.Join(d.remotes[host].LogPath, util.Remote_pid_path, util.SQL+strconv.Itoa(i)+util.Remote_pid_suffix),
-					filepath.Join(d.remotes[host].LogPath, strconv.Itoa(i), util.SQL_extra_log+strconv.Itoa(i)+util.Remote_log_suffix),
-					strconv.Itoa(i)},
-			},
-			Remote: d.remotes[host],
-		})
-		i++
-	}
-
-	// ts-store
-	i = 1
-	for _, host := range c.CommonConfig.StoreHosts {
-		d.runs.StoreAction = append(d.runs.StoreAction, &exec.RunAction{
-			Info: &exec.RunInfo{
-				ScriptPath: filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_etc_rel_path, util.Install_Script),
-				Args: []string{util.TS_STORE, d.remotes[host].LogPath,
-					filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_bin_rel_path, util.TS_STORE),
-					filepath.Join(d.remotes[host].UpDataPath, d.version, util.Remote_etc_rel_path, host+util.Remote_conf_suffix),
-					filepath.Join(d.remotes[host].LogPath, util.Remote_pid_path, util.STORE+strconv.Itoa(i)+util.Remote_pid_suffix),
-					filepath.Join(d.remotes[host].LogPath, strconv.Itoa(i), util.STORE_extra_log+strconv.Itoa(i)+util.Remote_log_suffix),
-					strconv.Itoa(i)},
-			},
-			Remote: d.remotes[host],
-		})
-		i++
-	}
-
-	return nil
-}
-
-func (d *GeminiDeployer) Deploy() error {
+func (d *GeminiInstaller) Install() error {
 	d.uploadFiles()
-	d.startCluster()
-	d.saveVersion()
 	return nil
 }
 
-func (d *GeminiDeployer) Start() error {
-	d.startCluster()
-	return nil
-}
-
-func (d *GeminiDeployer) saveVersion() error {
-	filePath := filepath.Join(util.Download_dst, util.VersionFile)
-	file, err := os.Create(filePath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	_, err = file.WriteString(d.version)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (d *GeminiDeployer) getVersion() (string, error) {
-	filePath := filepath.Join(util.Download_dst, util.VersionFile)
-	data, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return "", err
-	}
-
-	return string(data), nil
-}
-
-func (d *GeminiDeployer) uploadFiles() {
+func (d *GeminiInstaller) uploadFiles() {
 	d.wg.Add(len(d.uploads))
 	for ip, action := range d.uploads {
 		go func(ip string, action *UploadAction) {
@@ -412,42 +284,7 @@ func (d *GeminiDeployer) uploadFiles() {
 	d.wg.Wait()
 }
 
-func (d *GeminiDeployer) startCluster() {
-	if d.executor == nil {
-		return
-	}
-
-	// start all ts-meta concurrently
-	d.wg.Add(len(d.runs.MetaAction))
-	for _, action := range d.runs.MetaAction {
-		go func(action *exec.RunAction) {
-			defer d.wg.Done()
-			d.executor.ExecRunAction(action)
-		}(action)
-	}
-	d.wg.Wait()
-
-	// time for campaign
-	time.Sleep(time.Second)
-
-	// start all ts-store and ts-sql concurrently
-	d.wg.Add(len(d.runs.SqlAction) + len(d.runs.StoreAction))
-	for _, action := range d.runs.StoreAction {
-		go func(action *exec.RunAction) {
-			defer d.wg.Done()
-			d.executor.ExecRunAction(action)
-		}(action)
-	}
-	for _, action := range d.runs.SqlAction {
-		go func(action *exec.RunAction) {
-			defer d.wg.Done()
-			d.executor.ExecRunAction(action)
-		}(action)
-	}
-	d.wg.Wait()
-}
-
-func (d *GeminiDeployer) Close() {
+func (d *GeminiInstaller) Close() {
 	var err error
 	for _, sftp := range d.sftpClients {
 		if sftp != nil {

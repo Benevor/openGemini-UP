@@ -1,8 +1,9 @@
-package cmd
+package cluster
 
 import (
 	"fmt"
-	"openGemini-UP/pkg/deploy"
+	"openGemini-UP/pkg/install"
+	"openGemini-UP/pkg/start"
 	"openGemini-UP/pkg/stop"
 
 	"github.com/spf13/cobra"
@@ -22,8 +23,8 @@ var upgradeCmd = &cobra.Command{
 		}
 		fmt.Println("upgrade to cluster version: ", ops.Version)
 
-		// stop all services
-		stop := stop.NewGeminiStop(ops, false)
+		// destroy all services
+		stop := stop.NewGeminiStop(ops, true)
 		defer stop.Close()
 		if err := stop.Prepare(); err != nil {
 			fmt.Println(err)
@@ -33,15 +34,27 @@ var upgradeCmd = &cobra.Command{
 			fmt.Println(err)
 		}
 
-		// upload new bin files and start new services
-		deployer := deploy.NewGeminiDeployer(ops)
-		defer deployer.Close()
+		// install cluster
+		installer := install.NewGeminiInstaller(ops)
+		defer installer.Close()
 
-		if err := deployer.PrepareForDeploy(); err != nil {
+		if err := installer.PrepareForInstall(); err != nil {
 			fmt.Println(err)
 			return
 		}
-		if err := deployer.Deploy(); err != nil {
+		if err := installer.Install(); err != nil {
+			fmt.Println(err)
+		}
+
+		// start cluster
+		starter := start.NewGeminiStarter(ops)
+		defer starter.Close()
+
+		if err := starter.PrepareForStart(); err != nil {
+			fmt.Println(err)
+			return
+		}
+		if err := starter.Start(); err != nil {
 			fmt.Println(err)
 		}
 

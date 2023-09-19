@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
+// RootCmd represents the base command when called without any subcommands
+var RootCmd = &cobra.Command{
 	Use:   "openGemini-UP",
 	Short: "One-click deployment and upgrade tool for openGemini",
 	Long: `openGemini-UP is a one-click deployment and upgrade openGemini tool for users. 
@@ -18,7 +18,7 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
-	err := rootCmd.Execute()
+	err := RootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}

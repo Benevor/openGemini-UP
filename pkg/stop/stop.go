@@ -3,8 +3,8 @@ package stop
 import (
 	"fmt"
 	"openGemini-UP/pkg/config"
-	"openGemini-UP/pkg/deploy"
 	"openGemini-UP/pkg/exec"
+	"openGemini-UP/pkg/install"
 	"openGemini-UP/util"
 	"sync"
 
@@ -35,10 +35,10 @@ type GeminiStop struct {
 
 	wg sync.WaitGroup
 
-	clusterOptions deploy.ClusterOptions
+	clusterOptions install.ClusterOptions
 }
 
-func NewGeminiStop(ops deploy.ClusterOptions, delete bool) Stop {
+func NewGeminiStop(ops install.ClusterOptions, delete bool) Stop {
 	new := &GeminiStop{
 		remotes:        make(map[string]*config.RemoteHost),
 		stops:          make(map[string]*exec.StopAction),

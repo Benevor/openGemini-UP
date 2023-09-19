@@ -45,7 +45,7 @@ var installCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(installCmd)
+	RootCmd.AddCommand(installCmd)
 	installCmd.Flags().StringP("version", "v", "", "component version; default is v1.0.0")
 	installCmd.Flags().StringP("os", "o", "", "operating system, linux/darwin/windows; default is linux")
 	installCmd.Flags().StringP("arch", "a", "", "Supported values: amd64, arm64; default is amd64")
