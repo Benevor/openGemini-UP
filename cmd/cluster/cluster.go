@@ -5,7 +5,6 @@ package cluster
 
 import (
 	"fmt"
-	"openGemini-UP/cmd"
 	"openGemini-UP/pkg/config"
 	"openGemini-UP/pkg/install"
 	"openGemini-UP/util"
@@ -14,15 +13,11 @@ import (
 )
 
 // clusterCmd represents the cluster command
-var clusterCmd = &cobra.Command{
+var ClusterCmd = &cobra.Command{
 	Use:   "cluster",
 	Short: "manage cluster",
 	Long:  `Manage openGemini clusters, including install, stop, destroy, monitor, etc.`,
 	Run:   func(cmd *cobra.Command, args []string) {},
-}
-
-func init() {
-	cmd.RootCmd.AddCommand(clusterCmd)
 }
 
 func getClusterOptions(cmd *cobra.Command) (install.ClusterOptions, error) {

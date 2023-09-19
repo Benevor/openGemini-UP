@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"sync"
 
+	"errors"
+
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
@@ -80,9 +82,12 @@ func (d *GeminiInstaller) PrepareForInstall() error {
 		return err
 	}
 
+	// check the internet with all the remote servers
 	if err = d.prepareRemotes(conf, true); err != nil {
+		fmt.Printf("Failed to establish SSH connections with all remote servers. The specific error is: %s\n", err)
 		return err
 	}
+	fmt.Println("Success to establish SSH connections with all remote servers.")
 
 	d.executor = exec.NewGeminiExecutor(d.sshClients)
 
@@ -153,24 +158,10 @@ func (d *GeminiInstaller) tryConnect(needSftp bool) error {
 				r.UpDataPath = filepath.Join(pwd, r.UpDataPath[1:])
 			}
 
-			// Convert relative paths in openGemini.conf to absolute paths.
 			confPath := filepath.Join(util.Download_dst, util.Local_etc_rel_path, r.Ip+util.Remote_conf_suffix)
 			hostToml, _ := config.ReadFromToml(confPath)
-			if len(hostToml.Meta.Dir) > 1 && hostToml.Meta.Dir[:1] == "~" {
-				hostToml.Meta.Dir = filepath.Join(pwd, hostToml.Meta.Dir[1:])
-			}
-			if len(hostToml.Data.StoreDataDir) > 1 && hostToml.Data.StoreDataDir[:1] == "~" {
-				hostToml.Data.StoreDataDir = filepath.Join(pwd, hostToml.Data.StoreDataDir[1:])
-			}
-			if len(hostToml.Data.StoreWalDir) > 1 && hostToml.Data.StoreWalDir[:1] == "~" {
-				hostToml.Data.StoreWalDir = filepath.Join(pwd, hostToml.Data.StoreWalDir[1:])
-			}
-			if len(hostToml.Data.StoreMetaDir) > 1 && hostToml.Data.StoreMetaDir[:1] == "~" {
-				hostToml.Data.StoreMetaDir = filepath.Join(pwd, hostToml.Data.StoreMetaDir[1:])
-			}
-			if len(hostToml.Logging.Path) > 1 && hostToml.Logging.Path[:1] == "~" {
-				hostToml.Logging.Path = filepath.Join(pwd, hostToml.Logging.Path[1:])
-			}
+			// Convert relative paths in openGemini.conf to absolute paths.
+			hostToml = config.ConvertToml(hostToml, pwd)
 			config.GenNewToml(hostToml, confPath)
 		}
 	}
@@ -259,14 +250,10 @@ func (d *GeminiInstaller) prepareUploadActions(c *config.Config) error {
 }
 
 func (d *GeminiInstaller) Install() error {
-	d.uploadFiles()
-	return nil
-}
-
-func (d *GeminiInstaller) uploadFiles() {
 	d.wg.Add(len(d.uploads))
+	errChan := make(chan error, len(d.uploads))
 	for ip, action := range d.uploads {
-		go func(ip string, action *UploadAction) {
+		go func(ip string, action *UploadAction, errChan chan error) {
 			defer d.wg.Done()
 			for _, c := range action.uploadInfo {
 				// check whether need to upload the file
@@ -276,12 +263,23 @@ func (d *GeminiInstaller) uploadFiles() {
 				if string(output) == "File exists\n" && err == nil {
 					fmt.Printf("%s exists on %s.\n", c.FileName, c.RemotePath)
 				} else {
-					util.UploadFile(action.remoteHost.Ip, c.LocalPath, c.RemotePath, d.sftpClients[action.remoteHost.Ip])
+					if err := util.UploadFile(action.remoteHost.Ip, c.LocalPath, c.RemotePath, d.sftpClients[action.remoteHost.Ip]); err != nil {
+						fmt.Printf("upload %s to %s error: %v\n", c.LocalPath, action.remoteHost.Ip, err)
+						errChan <- err
+					}
 				}
 			}
-		}(ip, action)
+
+		}(ip, action, errChan)
 	}
 	d.wg.Wait()
+
+	select {
+	case <-errChan:
+		return errors.New("upload failed")
+	default:
+		return nil
+	}
 }
 
 func (d *GeminiInstaller) Close() {

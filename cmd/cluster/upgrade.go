@@ -14,8 +14,6 @@ var upgradeCmd = &cobra.Command{
 	Short: "upgrade cluster",
 	Long:  `upgrade an openGemini cluster to the specified version`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("--------------- Cluster upgrading! ---------------")
-
 		ops, err := getClusterOptions(cmd)
 		if err != nil {
 			fmt.Println(err)
@@ -57,13 +55,11 @@ var upgradeCmd = &cobra.Command{
 		if err := starter.Start(); err != nil {
 			fmt.Println(err)
 		}
-
-		fmt.Println("--------------- Successfully completed cluster upgrade! ---------------")
 	},
 }
 
 func init() {
-	clusterCmd.AddCommand(upgradeCmd)
+	ClusterCmd.AddCommand(upgradeCmd)
 	upgradeCmd.Flags().StringP("version", "v", "", "component name")
 	upgradeCmd.Flags().StringP("yaml", "y", "", "The path to cluster configuration yaml file")
 	upgradeCmd.Flags().StringP("user", "u", "", "The user name to login via SSH. The user must has root (or sudo) privilege.")

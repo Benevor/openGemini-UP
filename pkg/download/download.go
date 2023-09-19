@@ -46,22 +46,6 @@ func NewGeminiDownloader(ops DownloadOptions) Downloader {
 	}
 }
 
-func (d *GeminiDownloader) setVersion(v string) {
-	d.version = v
-}
-
-func (d *GeminiDownloader) setType(t string) {
-	d.typ = t
-}
-
-func (d *GeminiDownloader) setDestination(dst string) {
-	d.destination = dst
-}
-
-func (d *GeminiDownloader) setTimeout(t time.Duration) {
-	d.timeout = t
-}
-
 func (d *GeminiDownloader) spliceUrl() error {
 	if d.website == "" {
 		d.website = util.Download_web
@@ -71,15 +55,7 @@ func (d *GeminiDownloader) spliceUrl() error {
 		d.version = util.Download_default_version
 	}
 
-	if err := d.checkVersion(); err != nil {
-		return err
-	}
-
 	d.Url = d.website + "/" + d.version + "/" + util.Download_fill_char + d.version[1:] + d.typ
-	return nil
-}
-
-func (d *GeminiDownloader) checkVersion() error {
 	return nil
 }
 

@@ -16,8 +16,6 @@ var installCmd = &cobra.Command{
 	Short: "install cluster",
 	Long:  `Install an openGemini cluster based on configuration files and version numbers.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("--------------- Cluster install! ---------------")
-
 		ops, err := getClusterOptions(cmd)
 		if err != nil {
 			fmt.Println(err)
@@ -34,12 +32,11 @@ var installCmd = &cobra.Command{
 		if err := installer.Install(); err != nil {
 			fmt.Println(err)
 		}
-		fmt.Println("--------------- Successfully completed cluster install! ---------------")
 	},
 }
 
 func init() {
-	clusterCmd.AddCommand(installCmd)
+	ClusterCmd.AddCommand(installCmd)
 	installCmd.Flags().StringP("version", "v", "", "component name")
 	installCmd.Flags().StringP("yaml", "y", "", "The path to cluster configuration yaml file")
 	installCmd.Flags().StringP("user", "u", "", "The user name to login via SSH. The user must has root (or sudo) privilege.")

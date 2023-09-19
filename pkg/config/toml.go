@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/BurntSushi/toml"
 )
@@ -59,6 +60,25 @@ func ReadFromToml(tomlPath string) (Toml, error) {
 		return t, err
 	}
 	return t, nil
+}
+
+func ConvertToml(hostToml Toml, pwd string) Toml {
+	if len(hostToml.Meta.Dir) > 1 && hostToml.Meta.Dir[:1] == "~" {
+		hostToml.Meta.Dir = filepath.Join(pwd, hostToml.Meta.Dir[1:])
+	}
+	if len(hostToml.Data.StoreDataDir) > 1 && hostToml.Data.StoreDataDir[:1] == "~" {
+		hostToml.Data.StoreDataDir = filepath.Join(pwd, hostToml.Data.StoreDataDir[1:])
+	}
+	if len(hostToml.Data.StoreWalDir) > 1 && hostToml.Data.StoreWalDir[:1] == "~" {
+		hostToml.Data.StoreWalDir = filepath.Join(pwd, hostToml.Data.StoreWalDir[1:])
+	}
+	if len(hostToml.Data.StoreMetaDir) > 1 && hostToml.Data.StoreMetaDir[:1] == "~" {
+		hostToml.Data.StoreMetaDir = filepath.Join(pwd, hostToml.Data.StoreMetaDir[1:])
+	}
+	if len(hostToml.Logging.Path) > 1 && hostToml.Logging.Path[:1] == "~" {
+		hostToml.Logging.Path = filepath.Join(pwd, hostToml.Logging.Path[1:])
+	}
+	return hostToml
 }
 
 func GenNewToml(t Toml, path string) {

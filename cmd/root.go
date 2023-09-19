@@ -4,6 +4,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"openGemini-UP/cmd/cluster"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -18,6 +19,7 @@ var RootCmd = &cobra.Command{
 }
 
 func Execute() {
+	RootCmd.AddCommand(cluster.ClusterCmd)
 	err := RootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
