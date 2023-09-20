@@ -42,7 +42,7 @@ func NewGeminiStarter(ops install.ClusterOptions) Starter {
 		remotes:        make(map[string]*config.RemoteHost),
 		sshClients:     make(map[string]*ssh.Client),
 		version:        ops.Version,
-		configurator:   config.NewGeminiConfigurator(ops.YamlPath, filepath.Join(util.Download_dst, ops.Version, util.Local_etc_rel_path, util.Local_conf_name), filepath.Join(util.Download_dst, util.Local_etc_rel_path), ops.Version),
+		configurator:   config.NewGeminiConfigurator(ops.YamlPath, filepath.Join(util.Download_dst, ops.Version, util.Local_etc_rel_path, util.Local_conf_name), filepath.Join(util.Download_dst, util.Local_etc_rel_path)),
 		runs:           &exec.RunActions{},
 		clusterOptions: ops,
 	}

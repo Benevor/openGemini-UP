@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// stopCmd represents the list command
+// stopCmd represents the stop command
 var stopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "stop cluster",

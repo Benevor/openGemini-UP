@@ -59,7 +59,7 @@ func UpgradeCluster(ops install.ClusterOptions, oldV string) error {
 
 func init() {
 	ClusterCmd.AddCommand(upgradeCmd)
-	upgradeCmd.Flags().StringP("version", "v", "", "component name")
+	upgradeCmd.Flags().StringP("version", "v", "", "component version")
 	upgradeCmd.Flags().StringP("old_version", "o", "", "component name")
 	upgradeCmd.Flags().StringP("yaml", "y", "", "The path to cluster configuration yaml file")
 	upgradeCmd.Flags().StringP("user", "u", "", "The user name to login via SSH. The user must has root (or sudo) privilege.")

@@ -27,6 +27,11 @@ var startCmd = &cobra.Command{
 		if err != nil {
 			fmt.Println(err)
 		}
+
+		err = PatrolCluster(ops)
+		if err != nil {
+			fmt.Println(err)
+		}
 	},
 }
 
@@ -45,7 +50,7 @@ func StartCluster(ops install.ClusterOptions) error {
 
 func init() {
 	ClusterCmd.AddCommand(startCmd)
-	startCmd.Flags().StringP("version", "v", "", "component name")
+	startCmd.Flags().StringP("version", "v", "", "component version")
 	startCmd.Flags().StringP("yaml", "y", "", "The path to cluster configuration yaml file")
 	startCmd.Flags().StringP("user", "u", "", "The user name to login via SSH. The user must has root (or sudo) privilege.")
 	startCmd.Flags().StringP("key", "k", "", "The path of the SSH identity file. If specified, public key authentication will be used.")

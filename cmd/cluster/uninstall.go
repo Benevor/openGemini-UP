@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// uninstallCmd represents the list command
+// uninstallCmd represents the uninstall command
 var uninstallCmd = &cobra.Command{
 	Use:   "uninstall",
 	Short: "uninstall cluster",
@@ -45,7 +45,7 @@ func UninstallCluster(ops install.ClusterOptions) error {
 
 func init() {
 	ClusterCmd.AddCommand(uninstallCmd)
-	uninstallCmd.Flags().StringP("version", "v", "", "component name")
+	uninstallCmd.Flags().StringP("version", "v", "", "component version")
 	uninstallCmd.Flags().StringP("yaml", "y", "", "The path to cluster configuration yaml file")
 	uninstallCmd.Flags().StringP("user", "u", "", "The user name to login via SSH. The user must has root (or sudo) privilege.")
 	uninstallCmd.Flags().StringP("key", "k", "", "The path of the SSH identity file. If specified, public key authentication will be used.")

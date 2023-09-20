@@ -44,7 +44,7 @@ func InstallCluster(ops install.ClusterOptions) error {
 
 func init() {
 	ClusterCmd.AddCommand(installCmd)
-	installCmd.Flags().StringP("version", "v", "", "component name")
+	installCmd.Flags().StringP("version", "v", "", "component version")
 	installCmd.Flags().StringP("yaml", "y", "", "The path to cluster configuration yaml file")
 	installCmd.Flags().StringP("user", "u", "", "The user name to login via SSH. The user must has root (or sudo) privilege.")
 	installCmd.Flags().StringP("key", "k", "", "The path of the SSH identity file. If specified, public key authentication will be used.")

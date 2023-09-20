@@ -43,7 +43,7 @@ func (e *GeminiExecutor) ExecCommand(ip string, command string) (string, error) 
 		fmt.Printf("exec: %s on %s failed! %v\n", command, ip, err)
 		return "", err
 	}
-	fmt.Printf("exec: %s on %s\noutput: %s\n", command, ip, string(combo))
+	// fmt.Printf("exec: %s on %s\noutput: %s\n", command, ip, string(combo))
 	return string(combo), nil
 }
 
@@ -88,7 +88,7 @@ func (e *GeminiExecutor) ExecRunAction(action *RunAction) (string, error) {
 		fmt.Printf("exec: %s on %s failed! %v\n", command, ip, err)
 		return "", err
 	}
-	fmt.Printf("exec: %s on %s\noutput: %s\n", command, ip, string(combo))
+	// fmt.Printf("exec: %s on %s\noutput: %s\n", command, ip, string(combo))
 	return string(combo), nil
 }
 
@@ -120,7 +120,7 @@ func (e *GeminiExecutor) ExecStopAction(action *StopAction) (string, error) {
 		fmt.Printf("exec: %s on %s failed! %v\n", command, ip, err)
 		return "", err
 	}
-	fmt.Printf("exec: %s on %s\noutput: %s\n", command, ip, string(combo))
+	// fmt.Printf("exec: %s on %s\noutput: %s\n", command, ip, string(combo))
 
 	return string(combo), nil
 }

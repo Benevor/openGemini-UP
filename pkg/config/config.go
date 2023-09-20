@@ -30,16 +30,14 @@ type GeminiConfigurator struct {
 	yamlPath string
 	tomlPath string
 	genPath  string
-	version  string
 	conf     *Config
 }
 
-func NewGeminiConfigurator(yPath, tPath, gPath, v string) Configurator {
+func NewGeminiConfigurator(yPath, tPath, gPath string) Configurator {
 	return &GeminiConfigurator{
 		yamlPath: yPath,
 		tomlPath: tPath,
 		genPath:  gPath,
-		version:  v,
 		conf: &Config{
 			CommonConfig: &CommonConfig{},
 			SSHConfig:    make(map[string]SSHConfig),

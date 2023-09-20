@@ -37,7 +37,7 @@ func NewGeminiUninstaller(ops install.ClusterOptions) Uninstall {
 	new := &GeminiUninstaller{
 		remotes:        make(map[string]*config.RemoteHost),
 		sshClients:     make(map[string]*ssh.Client),
-		configurator:   config.NewGeminiConfigurator(ops.YamlPath, "", "", ""),
+		configurator:   config.NewGeminiConfigurator(ops.YamlPath, "", ""),
 		upDataPath:     make(map[string]string),
 		clusterOptions: ops,
 	}

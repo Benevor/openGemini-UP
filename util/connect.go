@@ -87,7 +87,7 @@ func NewSftpClient(sshClient *ssh.Client) (*sftp.Client, error) {
 
 // TODO(Benevor):timeout interval
 func UploadFile(ip string, localFilePath string, remoteDir string, sftpClient *sftp.Client) error {
-	fmt.Printf("start uploading %s to %s:%s \n", localFilePath, ip, remoteDir)
+	// fmt.Printf("start uploading %s to %s:%s \n", localFilePath, ip, remoteDir)
 	if sftpClient == nil {
 		return NoSftpSession
 	}
@@ -109,7 +109,7 @@ func UploadFile(ip string, localFilePath string, remoteDir string, sftpClient *s
 		fmt.Printf("%s:%s read from %s failed! %v\n", ip, path.Join(remoteDir, remoteFileName), localFilePath, err)
 		return err
 	}
-	fmt.Printf("finish uploading %s to %s:%s \n", localFilePath, ip, remoteDir)
+	// fmt.Printf("finish uploading %s to %s:%s \n", localFilePath, ip, remoteDir)
 	return nil
 }
 
