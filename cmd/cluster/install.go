@@ -39,6 +39,7 @@ func InstallCluster(ops install.ClusterOptions) error {
 	if err := installer.Install(); err != nil {
 		return err
 	}
+	fmt.Printf("Successfully installed the openGemini cluster with version : %s\n", ops.Version)
 	return nil
 }
 

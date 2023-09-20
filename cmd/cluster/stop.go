@@ -40,6 +40,7 @@ func StopCluster(ops install.ClusterOptions) error {
 	if err := stop.Run(); err != nil {
 		return err
 	}
+	fmt.Printf("Successfully stopped the openGemini cluster\n")
 	return nil
 }
 

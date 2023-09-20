@@ -250,6 +250,7 @@ func (d *GeminiInstaller) prepareUploadActions(c *config.Config) error {
 }
 
 func (d *GeminiInstaller) Install() error {
+	fmt.Println("Start to install openGemini...")
 	d.wg.Add(len(d.uploads))
 	errChan := make(chan error, len(d.uploads))
 	for ip, action := range d.uploads {

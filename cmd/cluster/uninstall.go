@@ -40,6 +40,7 @@ func UninstallCluster(ops install.ClusterOptions) error {
 	if err := uninstaller.Run(); err != nil {
 		return err
 	}
+	fmt.Printf("Successfully uninstalled the openGemini cluster with version : %s\n", ops.Version)
 	return nil
 }
 

@@ -28,6 +28,7 @@ var startCmd = &cobra.Command{
 			fmt.Println(err)
 		}
 
+		fmt.Printf("\nCheck the status of openGemini cluster\n")
 		err = PatrolCluster(ops)
 		if err != nil {
 			fmt.Println(err)
@@ -45,6 +46,7 @@ func StartCluster(ops install.ClusterOptions) error {
 	if err := starter.Start(); err != nil {
 		return err
 	}
+	fmt.Printf("Successfully started the openGemini cluster with version : %s\n", ops.Version)
 	return nil
 }
 

@@ -109,7 +109,7 @@ func UploadFile(ip string, localFilePath string, remoteDir string, sftpClient *s
 		fmt.Printf("%s:%s read from %s failed! %v\n", ip, path.Join(remoteDir, remoteFileName), localFilePath, err)
 		return err
 	}
-	// fmt.Printf("finish uploading %s to %s:%s \n", localFilePath, ip, remoteDir)
+	fmt.Printf("upload %s to %s:%s \n", localFilePath, ip, remoteDir)
 	return nil
 }
 

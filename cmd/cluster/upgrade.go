@@ -54,6 +54,7 @@ func UpgradeCluster(ops install.ClusterOptions, oldV string) error {
 	if err := StartCluster(ops); err != nil {
 		return err
 	}
+	fmt.Printf("Successfully upgraded the openGemini cluster from %s to %s\n", oldV, ops.Version)
 	return nil
 }
 

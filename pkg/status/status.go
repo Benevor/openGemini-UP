@@ -69,7 +69,7 @@ func (d *GeminiStatusPatroller) PrepareForPatrol() error {
 	conf := d.configurator.GetConfig()
 
 	// check the internet with all the remote servers
-	if err = d.prepareRemotes(conf, true); err != nil {
+	if err = d.prepareRemotes(conf); err != nil {
 		fmt.Printf("Failed to establish SSH connections with all remote servers. The specific error is: %s\n", err)
 		return err
 	}
@@ -79,7 +79,7 @@ func (d *GeminiStatusPatroller) PrepareForPatrol() error {
 	return nil
 }
 
-func (d *GeminiStatusPatroller) prepareRemotes(c *config.Config, needSftp bool) error {
+func (d *GeminiStatusPatroller) prepareRemotes(c *config.Config) error {
 	if c == nil {
 		return util.UnexpectedNil
 	}
@@ -97,14 +97,14 @@ func (d *GeminiStatusPatroller) prepareRemotes(c *config.Config, needSftp bool) 
 		}
 	}
 
-	if err := d.tryConnect(needSftp); err != nil {
+	if err := d.tryConnect(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (d *GeminiStatusPatroller) tryConnect(needSftp bool) error {
+func (d *GeminiStatusPatroller) tryConnect() error {
 	for ip, r := range d.remotes {
 		var err error
 		var sshClient *ssh.Client
