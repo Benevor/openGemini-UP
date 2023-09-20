@@ -139,7 +139,6 @@ func (d *GeminiInstaller) tryConnect(needSftp bool) error {
 
 		}
 		if err != nil {
-			// TODO(Benevor):close all connection and exit
 			return err
 		}
 		d.sshClients[ip] = sshClient
@@ -147,7 +146,6 @@ func (d *GeminiInstaller) tryConnect(needSftp bool) error {
 		if needSftp {
 			sftpClient, err := util.NewSftpClient(sshClient)
 			if err != nil {
-				// TODO(Benevor):close all connection and exit
 				return err
 			}
 			d.sftpClients[ip] = sftpClient
@@ -277,7 +275,7 @@ func (d *GeminiInstaller) Install() error {
 
 	select {
 	case <-errChan:
-		return errors.New("upload failed")
+		return errors.New("cluster install failed")
 	default:
 		return nil
 	}

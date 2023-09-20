@@ -99,7 +99,6 @@ func (s *GeminiUninstaller) tryConnect() error {
 
 		}
 		if err != nil {
-			// TODO(Benevor):close all connection and exit
 			return err
 		}
 		s.sshClients[ip] = sshClient

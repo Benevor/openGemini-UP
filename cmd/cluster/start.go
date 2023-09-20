@@ -26,6 +26,7 @@ var startCmd = &cobra.Command{
 		err = StartCluster(ops)
 		if err != nil {
 			fmt.Println(err)
+			return
 		}
 
 		fmt.Printf("\nCheck the status of openGemini cluster\n")

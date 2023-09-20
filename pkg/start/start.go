@@ -1,13 +1,16 @@
 package start
 
 import (
+	"errors"
 	"fmt"
 	"openGemini-UP/pkg/config"
 	"openGemini-UP/pkg/exec"
 	"openGemini-UP/pkg/install"
+	"openGemini-UP/pkg/status"
 	"openGemini-UP/util"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -63,10 +66,17 @@ func (d *GeminiStarter) PrepareForStart() error {
 
 	d.executor = exec.NewGeminiExecutor(d.sshClients)
 
+	// check process conflict and port conflict
+	if d.checkProcessConflict() {
+		return errors.New("process conflict before starting")
+	}
+	if confilted, port := d.checkPortConflict(conf); confilted {
+		return fmt.Errorf("port %d conflict before starting", port)
+	}
+
 	if err = d.prepareRunActions(conf); err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -107,7 +117,6 @@ func (d *GeminiStarter) tryConnect() error {
 
 		}
 		if err != nil {
-			// TODO(Benevor):close all connection and exit
 			return err
 		}
 		d.sshClients[ip] = sshClient
@@ -173,18 +182,178 @@ func (d *GeminiStarter) prepareRunActions(c *config.Config) error {
 	return nil
 }
 
+func (d *GeminiStarter) checkProcessConflict() bool {
+	for ip := range d.remotes {
+		output, err := d.executor.ExecCommand(ip, status.CheckProcessCommand)
+		if err != nil {
+			fmt.Println(err)
+			return true
+		} else {
+			if output != "" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (d *GeminiStarter) checkPortConflict(conf *config.Config) (bool, int) {
+	// check port conflict about ts-meta
+	for _, ip := range conf.CommonConfig.MetaHosts {
+		tomlPath := filepath.Join(util.Download_dst, util.Local_etc_rel_path, ip+util.Remote_conf_suffix)
+		t, err := config.ReadFromToml(tomlPath)
+		if err != nil {
+			fmt.Println(err)
+			return true, 0
+		}
+
+		if err, confilted, port := d.checkOnePortWithStr(ip, t.Meta.BindAddress); err != nil {
+			fmt.Println(err)
+			return true, 0
+		} else {
+			if confilted {
+				return true, port
+			}
+		}
+
+		if err, confilted, port := d.checkOnePortWithStr(ip, t.Meta.HttpBindAddress); err != nil {
+			fmt.Println(err)
+			return true, 0
+		} else {
+			if confilted {
+				return true, port
+			}
+		}
+
+		if err, confilted, port := d.checkOnePortWithStr(ip, t.Meta.RpcBindAddress); err != nil {
+			fmt.Println(err)
+			return true, 0
+		} else {
+			if confilted {
+				return true, port
+			}
+		}
+
+		if err, confilted, port := d.checkOnePortWithInt(ip, t.Gossip.MetaBindPort); err != nil {
+			fmt.Println(err)
+			return true, 0
+		} else {
+			if confilted {
+				return true, port
+			}
+		}
+	}
+
+	// check port conflict about ts-sql
+	for _, ip := range conf.CommonConfig.SqlHosts {
+		tomlPath := filepath.Join(util.Download_dst, util.Local_etc_rel_path, ip+util.Remote_conf_suffix)
+		t, err := config.ReadFromToml(tomlPath)
+		if err != nil {
+			fmt.Println(err)
+			return true, 0
+		}
+
+		if err, confilted, port := d.checkOnePortWithStr(ip, t.Http.BindAddress); err != nil {
+			fmt.Println(err)
+			return true, 0
+		} else {
+			if confilted {
+				return true, port
+			}
+		}
+	}
+
+	// check port conflict about ts-store
+	for _, ip := range conf.CommonConfig.StoreHosts {
+		tomlPath := filepath.Join(util.Download_dst, util.Local_etc_rel_path, ip+util.Remote_conf_suffix)
+		t, err := config.ReadFromToml(tomlPath)
+		if err != nil {
+			fmt.Println(err)
+			return true, 0
+		}
+
+		if err, confilted, port := d.checkOnePortWithStr(ip, t.Data.StoreIngestAddr); err != nil {
+			fmt.Println(err)
+			return true, 0
+		} else {
+			if confilted {
+				return true, port
+			}
+		}
+
+		if err, confilted, port := d.checkOnePortWithStr(ip, t.Data.StoreSelectAddr); err != nil {
+			fmt.Println(err)
+			return true, 0
+		} else {
+			if confilted {
+				return true, port
+			}
+		}
+
+		if err, confilted, port := d.checkOnePortWithInt(ip, t.Gossip.StoreBindPort); err != nil {
+			fmt.Println(err)
+			return true, 0
+		} else {
+			if confilted {
+				return true, port
+			}
+		}
+	}
+
+	return false, 0
+}
+
+func (d *GeminiStarter) checkOnePortWithStr(ip, inputStr string) (error, bool, int) {
+	parts := strings.Split(inputStr, ":")
+	if len(parts) < 2 {
+		return errors.New("invalid inputStr format when check one port conflit"), true, 0
+	}
+	portStr := parts[1]
+
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		return err, true, port
+	}
+
+	output, err := d.executor.ExecCommand(ip, status.GenCheckPortCommand(port))
+	if err != nil {
+		return err, true, port
+	} else {
+		if output == "yes\n" {
+			return nil, true, port
+		} else if output == "no\n" {
+			return nil, false, port
+		}
+	}
+	return errors.New("unexpected port confilt check result"), true, port
+}
+
+func (d *GeminiStarter) checkOnePortWithInt(ip string, port int) (error, bool, int) {
+	output, err := d.executor.ExecCommand(ip, status.GenCheckPortCommand(port))
+	if err != nil {
+		return err, true, port
+	} else {
+		if output == "yes\n" {
+			return nil, true, port
+		} else if output == "no\n" {
+			return nil, false, port
+		}
+	}
+	return errors.New("unexpected port confilt check result"), true, port
+}
+
 func (d *GeminiStarter) Start() error {
 	if d.executor == nil {
 		return nil
 	}
-
+	errChan := make(chan error, len(d.runs.MetaAction)+len(d.runs.SqlAction)+len(d.runs.StoreAction))
 	// start all ts-meta concurrently
 	d.wg.Add(len(d.runs.MetaAction))
 	for _, action := range d.runs.MetaAction {
-		go func(action *exec.RunAction) {
+		go func(action *exec.RunAction, errChan chan error) {
 			defer d.wg.Done()
-			d.executor.ExecRunAction(action)
-		}(action)
+			d.executor.ExecRunAction(action, errChan)
+		}(action, errChan)
 	}
 	d.wg.Wait()
 
@@ -194,19 +363,25 @@ func (d *GeminiStarter) Start() error {
 	// start all ts-store and ts-sql concurrently
 	d.wg.Add(len(d.runs.SqlAction) + len(d.runs.StoreAction))
 	for _, action := range d.runs.StoreAction {
-		go func(action *exec.RunAction) {
+		go func(action *exec.RunAction, errChan chan error) {
 			defer d.wg.Done()
-			d.executor.ExecRunAction(action)
-		}(action)
+			d.executor.ExecRunAction(action, errChan)
+		}(action, errChan)
 	}
 	for _, action := range d.runs.SqlAction {
-		go func(action *exec.RunAction) {
+		go func(action *exec.RunAction, errChan chan error) {
 			defer d.wg.Done()
-			d.executor.ExecRunAction(action)
-		}(action)
+			d.executor.ExecRunAction(action, errChan)
+		}(action, errChan)
 	}
 	d.wg.Wait()
-	return nil
+
+	select {
+	case <-errChan:
+		return errors.New("cluster start failed")
+	default:
+		return nil
+	}
 }
 
 func (d *GeminiStarter) Close() {

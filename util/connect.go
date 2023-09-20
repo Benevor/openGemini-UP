@@ -85,7 +85,6 @@ func NewSftpClient(sshClient *ssh.Client) (*sftp.Client, error) {
 	return sftpClient, nil
 }
 
-// TODO(Benevor):timeout interval
 func UploadFile(ip string, localFilePath string, remoteDir string, sftpClient *sftp.Client) error {
 	// fmt.Printf("start uploading %s to %s:%s \n", localFilePath, ip, remoteDir)
 	if sftpClient == nil {

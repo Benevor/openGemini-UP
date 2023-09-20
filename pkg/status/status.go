@@ -20,7 +20,7 @@ const CheckDiskCapicityCommand = "df -h | grep '^/dev/'"
 
 var AlwaysCheckPosrt = []int{8088, 8091, 8092, 8086, 8400, 8401, 8010, 8011}
 
-func genCheckPortCommand(port int) string {
+func GenCheckPortCommand(port int) string {
 	return fmt.Sprintf("ss -tln | grep -q ':%d' && echo 'yes' || echo 'no'", port)
 }
 
@@ -116,7 +116,6 @@ func (d *GeminiStatusPatroller) tryConnect() error {
 
 		}
 		if err != nil {
-			// TODO(Benevor):close all connection and exit
 			return err
 		}
 		d.sshClients[ip] = sshClient
@@ -216,7 +215,7 @@ func (d *GeminiStatusPatroller) patrolOneServer(ip string, statusChan chan Clust
 		ports[p] = p
 	}
 	for port := range ports {
-		output, err := d.executor.ExecCommand(ip, genCheckPortCommand(port))
+		output, err := d.executor.ExecCommand(ip, GenCheckPortCommand(port))
 		if err != nil {
 			fmt.Println(err)
 			errChan <- err

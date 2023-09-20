@@ -9,7 +9,7 @@ import (
 )
 
 type Executor interface {
-	ExecRunAction(action *RunAction) (string, error)
+	ExecRunAction(action *RunAction, errChan chan error) string
 	ExecStopAction(action *StopAction) (string, error)
 	ExecCommand(ip string, command string) (string, error)
 }
@@ -63,12 +63,13 @@ type RunActions struct {
 	StoreAction []*RunAction
 }
 
-func (e *GeminiExecutor) ExecRunAction(action *RunAction) (string, error) {
+func (e *GeminiExecutor) ExecRunAction(action *RunAction, errChan chan error) string {
 	ip := action.Remote.Ip
 	sshClient := e.sshClients[ip]
 	if sshClient == nil {
 		fmt.Printf("no ssh client for %s\n", ip)
-		return "", util.NoSshClient
+		errChan <- util.NoSshClient
+		return ""
 	}
 
 	sshSession, err := util.NewSshSession(sshClient)
@@ -86,10 +87,11 @@ func (e *GeminiExecutor) ExecRunAction(action *RunAction) (string, error) {
 	combo, err := sshSession.CombinedOutput(command)
 	if err != nil {
 		fmt.Printf("exec: %s on %s failed! %v\n", command, ip, err)
-		return "", err
+		errChan <- err
+		return ""
 	}
 	// fmt.Printf("exec: %s on %s\noutput: %s\n", command, ip, string(combo))
-	return string(combo), nil
+	return string(combo)
 }
 
 type StopAction struct {
