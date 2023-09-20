@@ -3,8 +3,6 @@ package cluster
 import (
 	"fmt"
 	"openGemini-UP/pkg/install"
-	"openGemini-UP/pkg/start"
-	"openGemini-UP/pkg/stop"
 
 	"github.com/spf13/cobra"
 )
@@ -19,48 +17,50 @@ var upgradeCmd = &cobra.Command{
 			fmt.Println(err)
 			return
 		}
-		fmt.Println("upgrade to cluster version: ", ops.Version)
 
-		// destroy all services
-		stop := stop.NewGeminiStop(ops, true)
-		defer stop.Close()
-		if err := stop.Prepare(); err != nil {
-			fmt.Println(err)
+		var old_version string
+		if old_version, _ = cmd.Flags().GetString("old_version"); old_version == "" {
+			fmt.Println("the old_version is required")
 			return
 		}
-		if err := stop.Run(); err != nil {
-			fmt.Println(err)
-		}
 
-		// install cluster
-		installer := install.NewGeminiInstaller(ops)
-		defer installer.Close()
-
-		if err := installer.PrepareForInstall(); err != nil {
-			fmt.Println(err)
-			return
-		}
-		if err := installer.Install(); err != nil {
-			fmt.Println(err)
-		}
-
-		// start cluster
-		starter := start.NewGeminiStarter(ops)
-		defer starter.Close()
-
-		if err := starter.PrepareForStart(); err != nil {
-			fmt.Println(err)
-			return
-		}
-		if err := starter.Start(); err != nil {
+		err = UpgradeCluster(ops, old_version)
+		if err != nil {
 			fmt.Println(err)
 		}
 	},
 }
 
+func UpgradeCluster(ops install.ClusterOptions, oldV string) error {
+	oldOps := ops
+	oldOps.Version = oldV
+
+	// stop all services
+	if err := StopCluster(oldOps); err != nil {
+		return err
+	}
+
+	// uninstall openGeini
+	if err := UninstallCluster(oldOps); err != nil {
+		return err
+	}
+
+	// install new cluster
+	if err := InstallCluster(ops); err != nil {
+		return err
+	}
+
+	// start new cluster
+	if err := StartCluster(ops); err != nil {
+		return err
+	}
+	return nil
+}
+
 func init() {
 	ClusterCmd.AddCommand(upgradeCmd)
 	upgradeCmd.Flags().StringP("version", "v", "", "component name")
+	upgradeCmd.Flags().StringP("old_version", "o", "", "component name")
 	upgradeCmd.Flags().StringP("yaml", "y", "", "The path to cluster configuration yaml file")
 	upgradeCmd.Flags().StringP("user", "u", "", "The user name to login via SSH. The user must has root (or sudo) privilege.")
 	upgradeCmd.Flags().StringP("key", "k", "", "The path of the SSH identity file. If specified, public key authentication will be used.")

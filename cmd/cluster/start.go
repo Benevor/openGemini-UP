@@ -5,6 +5,7 @@ package cluster
 
 import (
 	"fmt"
+	"openGemini-UP/pkg/install"
 	"openGemini-UP/pkg/start"
 
 	"github.com/spf13/cobra"
@@ -22,17 +23,24 @@ var startCmd = &cobra.Command{
 			return
 		}
 
-		starter := start.NewGeminiStarter(ops)
-		defer starter.Close()
-
-		if err := starter.PrepareForStart(); err != nil {
-			fmt.Println(err)
-			return
-		}
-		if err := starter.Start(); err != nil {
+		err = StartCluster(ops)
+		if err != nil {
 			fmt.Println(err)
 		}
 	},
+}
+
+func StartCluster(ops install.ClusterOptions) error {
+	starter := start.NewGeminiStarter(ops)
+	defer starter.Close()
+
+	if err := starter.PrepareForStart(); err != nil {
+		return err
+	}
+	if err := starter.Start(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func init() {

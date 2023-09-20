@@ -56,8 +56,10 @@ func (d *GeminiStarter) PrepareForStart() error {
 	conf := d.configurator.GetConfig()
 
 	if err = d.prepareRemotes(conf, false); err != nil {
+		fmt.Printf("Failed to establish SSH connections with all remote servers. The specific error is: %s\n", err)
 		return err
 	}
+	fmt.Println("Success to establish SSH connections with all remote servers.")
 
 	d.executor = exec.NewGeminiExecutor(d.sshClients)
 

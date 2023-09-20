@@ -5,6 +5,7 @@ package cluster
 
 import (
 	"fmt"
+	"openGemini-UP/pkg/install"
 	"openGemini-UP/pkg/stop"
 
 	"github.com/spf13/cobra"
@@ -22,18 +23,24 @@ var stopCmd = &cobra.Command{
 			return
 		}
 
-		// stop all services
-		stop := stop.NewGeminiStop(ops, false)
-		defer stop.Close()
-
-		if err := stop.Prepare(); err != nil {
-			fmt.Println(err)
-			return
-		}
-		if err := stop.Run(); err != nil {
+		err = StopCluster(ops)
+		if err != nil {
 			fmt.Println(err)
 		}
 	},
+}
+
+func StopCluster(ops install.ClusterOptions) error {
+	stop := stop.NewGeminiStop(ops)
+	defer stop.Close()
+
+	if err := stop.Prepare(); err != nil {
+		return err
+	}
+	if err := stop.Run(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func init() {

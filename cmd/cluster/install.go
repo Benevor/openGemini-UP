@@ -22,17 +22,24 @@ var installCmd = &cobra.Command{
 			return
 		}
 
-		installer := install.NewGeminiInstaller(ops)
-		defer installer.Close()
-
-		if err := installer.PrepareForInstall(); err != nil {
-			fmt.Println(err)
-			return
-		}
-		if err := installer.Install(); err != nil {
+		err = InstallCluster(ops)
+		if err != nil {
 			fmt.Println(err)
 		}
 	},
+}
+
+func InstallCluster(ops install.ClusterOptions) error {
+	installer := install.NewGeminiInstaller(ops)
+	defer installer.Close()
+
+	if err := installer.PrepareForInstall(); err != nil {
+		return err
+	}
+	if err := installer.Install(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func init() {

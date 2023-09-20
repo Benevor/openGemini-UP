@@ -1,4 +1,4 @@
-package stop
+package uninstall
 
 import (
 	"fmt"
@@ -6,47 +6,45 @@ import (
 	"openGemini-UP/pkg/exec"
 	"openGemini-UP/pkg/install"
 	"openGemini-UP/util"
+	"path/filepath"
 	"sync"
 
 	"golang.org/x/crypto/ssh"
 )
 
-type Stop interface {
+type Uninstall interface {
 	Prepare() error
 	Run() error
 	Close()
 }
 
-type GeminiStop struct {
+type GeminiUninstaller struct {
 	// ip -> remotes
 	remotes map[string]*config.RemoteHost
-
-	// ip -> actions
-	stops map[string]*exec.StopAction
-
 	// ip -> ssh clients
 	sshClients map[string]*ssh.Client
 
 	configurator config.Configurator // conf reader
 	executor     exec.Executor       // execute commands on remote host
+	upDataPath   map[string]string   // ip->up path
 
 	wg sync.WaitGroup
 
 	clusterOptions install.ClusterOptions
 }
 
-func NewGeminiStop(ops install.ClusterOptions) Stop {
-	new := &GeminiStop{
+func NewGeminiUninstaller(ops install.ClusterOptions) Uninstall {
+	new := &GeminiUninstaller{
 		remotes:        make(map[string]*config.RemoteHost),
-		stops:          make(map[string]*exec.StopAction),
 		sshClients:     make(map[string]*ssh.Client),
 		configurator:   config.NewGeminiConfigurator(ops.YamlPath, "", "", ""),
+		upDataPath:     make(map[string]string),
 		clusterOptions: ops,
 	}
 	return new
 }
 
-func (s *GeminiStop) Prepare() error {
+func (s *GeminiUninstaller) Prepare() error {
 	var err error
 	if err = s.configurator.RunWithoutGen(); err != nil {
 		return err
@@ -61,14 +59,10 @@ func (s *GeminiStop) Prepare() error {
 
 	s.executor = exec.NewGeminiExecutor(s.sshClients)
 
-	if err = s.prepareStopActions(conf); err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func (s *GeminiStop) prepareRemotes(c *config.Config) error {
+func (s *GeminiUninstaller) prepareRemotes(c *config.Config) error {
 	if c == nil {
 		return util.UnexpectedNil
 	}
@@ -82,6 +76,8 @@ func (s *GeminiStop) prepareRemotes(c *config.Config) error {
 			KeyPath:  s.clusterOptions.Key,
 			Typ:      s.clusterOptions.SshType,
 		}
+
+		s.upDataPath[ip] = ssh.UpDataPath
 	}
 
 	if err := s.tryConnect(); err != nil {
@@ -91,7 +87,7 @@ func (s *GeminiStop) prepareRemotes(c *config.Config) error {
 	return nil
 }
 
-func (s *GeminiStop) tryConnect() error {
+func (s *GeminiUninstaller) tryConnect() error {
 	for ip, r := range s.remotes {
 		var err error
 		var sshClient *ssh.Client
@@ -103,6 +99,7 @@ func (s *GeminiStop) tryConnect() error {
 
 		}
 		if err != nil {
+			// TODO(Benevor):close all connection and exit
 			return err
 		}
 		s.sshClients[ip] = sshClient
@@ -110,56 +107,23 @@ func (s *GeminiStop) tryConnect() error {
 	return nil
 }
 
-func (s *GeminiStop) prepareStopActions(c *config.Config) error {
-
-	// ts-meta
-	for ip := range c.SSHConfig {
-		if s.stops[ip] == nil {
-			s.stops[ip] = &exec.StopAction{
-				Remote: s.remotes[ip],
-			}
-		}
-		s.stops[ip].ProcessNames = append(s.stops[ip].ProcessNames, util.TS_META)
-	}
-
-	// ts-sql
-	for ip := range c.SSHConfig {
-		if s.stops[ip] == nil {
-			s.stops[ip] = &exec.StopAction{
-				Remote: s.remotes[ip],
-			}
-		}
-		s.stops[ip].ProcessNames = append(s.stops[ip].ProcessNames, util.TS_SQL)
-	}
-
-	// ts-store
-	for ip := range c.SSHConfig {
-		if s.stops[ip] == nil {
-			s.stops[ip] = &exec.StopAction{
-				Remote: s.remotes[ip],
-			}
-		}
-		s.stops[ip].ProcessNames = append(s.stops[ip].ProcessNames, util.TS_STORE)
-	}
-	return nil
-}
-
-func (s *GeminiStop) Run() error {
+func (s *GeminiUninstaller) Run() error {
 	if s.executor == nil {
 		return util.UnexpectedNil
 	}
-	s.wg.Add(len(s.stops))
-	for _, action := range s.stops {
-		go func(action *exec.StopAction) {
+	s.wg.Add(len(s.remotes))
+	for ip := range s.remotes {
+		go func(ip string) {
 			defer s.wg.Done()
-			s.executor.ExecStopAction(action)
-		}(action)
+			command := fmt.Sprintf("rm -rf %s;", filepath.Join(s.upDataPath[ip], s.clusterOptions.Version))
+			s.executor.ExecCommand(ip, command)
+		}(ip)
 	}
 	s.wg.Wait()
 	return nil
 }
 
-func (s *GeminiStop) Close() {
+func (s *GeminiUninstaller) Close() {
 	var err error
 	for _, ssh := range s.sshClients {
 		if ssh != nil {
