@@ -134,16 +134,19 @@ func (d *GeminiStatusPatroller) Patrol() error {
 
 	select {
 	case <-errChan:
+		close(errChan)
 		return errors.New("check cluster status failed")
 	default:
 	}
 
-	for i := 0; i < len(d.remotes); i++ {
-		status := <-statusChan
-		displayGeminiStatus(status)
+	for {
+		select {
+		case status := <-statusChan:
+			displayGeminiStatus(status)
+		default:
+			return nil
+		}
 	}
-
-	return nil
 }
 
 func (d *GeminiStatusPatroller) patrolOneServer(ip string, statusChan chan ClusterStatusPerServer, errChan chan error) {

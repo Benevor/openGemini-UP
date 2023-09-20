@@ -275,6 +275,7 @@ func (d *GeminiInstaller) Install() error {
 
 	select {
 	case <-errChan:
+		close(errChan)
 		return errors.New("cluster install failed")
 	default:
 		return nil

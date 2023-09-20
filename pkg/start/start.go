@@ -378,6 +378,7 @@ func (d *GeminiStarter) Start() error {
 
 	select {
 	case <-errChan:
+		close(errChan)
 		return errors.New("cluster start failed")
 	default:
 		return nil
