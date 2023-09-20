@@ -54,11 +54,13 @@ func (c *GeminiConfigurator) Run() error {
 	if y, err = ReadFromYaml(c.yamlPath); err != nil {
 		return err
 	}
+	c.buildFromYaml(y)
+
+	// generate new toml files
 	if t, err = ReadFromToml(c.tomlPath); err != nil {
 		return err
 	}
 	GenConfs(y, t, c.genPath)
-	c.buildFromYaml(y)
 	return err
 }
 
