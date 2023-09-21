@@ -22,18 +22,18 @@ The following table describes some commonly used basic commands.
 | --- | --- | --- | --- |
 | `version` | display version number of openGemini-UP | no para | `./openGemini-UP version` |
 | `list` | display the version information of all components currently downloaded | no para | `./openGemini-UP list` |
-| `install` | install database components | --version | `./openGemini-UP install --version v1.0.0` |
-| `cluster` | deploying and managing openGemini clusters | have subcommand | |
+| `cluster` | deploying and managing openGemini clusters                   | have subcommand |                           |
 
 The following table describes the subcommands of the `cluster` command.
 
 | command | description | parameter | example |
 | --- | --- | --- | --- |
-| `deploy` | deploy an openGemini cluster| --version<br />--yaml<br />--user<br />--key<br />--password | `./openGemini-UP cluster deploy --version v1.0.0 --yaml ./topology.example.yaml --user root --key ~/.ssh/id_rsa` |
-| `stop` | stop an openGemini cluster | --yaml<br />--user<br />--key<br />--password | `./openGemini-UP cluster stop --yaml ./topology.example.yaml --user root --password xxxxxx` |
-| `start` | start an openGemini cluster which is stopped | --yaml<br />--user<br />--key<br />--password | `./openGemini-UP cluster start --yaml ./topology.example.yaml --user root --password xxxxxx` |
-| `destroy` | destroy an openGemini cluster which means stopping services and clearing data| --yaml<br />--user<br />--key<br />--password | `./openGemini-UP cluster destroy --yaml ./topology.example.yaml --user root --password xxxxxx` |
-| `upgrade` | upgrade an openGemini cluster to the specified version | --version<br />--yaml<br />--user<br />--key<br />--password | `./openGemini-UP cluster upgrade --version v1.0.0 --yaml ./topology.example.yaml --user root --password xxxxxx` |
+| `install` | install an openGemini cluster | --version<br />--yaml<br />--user<br />--key<br />--password | `./openGemini-UP cluster install --version v1.0.0 --yaml ./topology.example.yaml --user root --key ~/.ssh/id_rsa` |
+| `start`     | start an openGemini cluster and check the running status after startup | --version<br />--yaml<br />--user<br />--key<br />--password | `./openGemini-UP cluster start --version v1.0.0 --yaml ./topology.example.yaml --user root --key ~/.ssh/id_rsa` |
+| `stop`      | stop an openGemini cluster                                   | --yaml<br />--user<br />--key<br />--password                | `./openGemini-UP cluster stop --yaml ./topology.example.yaml --user root --password xxxxxx` |
+| `uninstall` | uninstall an openGemini cluster which means clearing data    | --version<br />--yaml<br />--user<br />--key<br />--password | `./openGemini-UP cluster uninstall --version v1.0.0 --yaml ./topology.example.yaml --user root --password xxxxxx` |
+| `status`    | Check the running status of the openGemini cluster, including port occupancy, disk capacity, etc | --yaml<br />--user<br />--key<br />--password | `./openGemini-UP cluster status --yaml  ./topology.example.yaml --user liujibo --key ~/.ssh/id_rsa` |
+| `upgrade`   | upgrade an openGemini cluster to the specified version and uninstall the old one | --version<br />--old_version<br />--yaml<br />--user<br />--key<br />--password | `./openGemini-UP cluster upgrade --old_version v1.0.0 --version v1.0.1 --yaml ./topology.example.yaml --user root --password xxxxxx` |
 
 ## topology.example.yaml
 
@@ -41,7 +41,7 @@ The `topology.example.yaml` is written by the user and contains the necessary in
 
 The meaning of each part is as follows:
 
-* `global`: Default values for some options.
+* `global`: Default values for some options. These options are mandatory.
 * `ts-meta`:  Deployment information for `ts-meta`, users can modify some options in `openGemini.conf` here.
 * `ts-sql`: Deployment information for `ts-sql`, users can modify some options in `openGemini.conf` here.
 * `ts-store`: Deployment information for `ts-store`, users can modify some options in `openGemini.conf` here.
