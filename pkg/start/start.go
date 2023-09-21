@@ -347,40 +347,59 @@ func (d *GeminiStarter) Start() error {
 		return nil
 	}
 	errChan := make(chan error, len(d.runs.MetaAction)+len(d.runs.SqlAction)+len(d.runs.StoreAction))
-	// start all ts-meta concurrently
-	d.wg.Add(len(d.runs.MetaAction))
-	for _, action := range d.runs.MetaAction {
-		go func(action *exec.RunAction, errChan chan error) {
-			defer d.wg.Done()
-			d.executor.ExecRunAction(action, errChan)
-		}(action, errChan)
-	}
-	d.wg.Wait()
+	var wgp sync.WaitGroup
+	wgp.Add(2)
 
-	// time for ts-meta campaign
-	time.Sleep(time.Second)
+	go func() {
+		defer wgp.Done()
+		// start all ts-meta concurrently
+		d.wg.Add(len(d.runs.MetaAction))
+		for _, action := range d.runs.MetaAction {
+			go func(action *exec.RunAction, errChan chan error) {
+				defer d.wg.Done()
+				d.executor.ExecRunAction(action, errChan)
+			}(action, errChan)
+		}
+		d.wg.Wait()
 
-	// start all ts-store and ts-sql concurrently
-	d.wg.Add(len(d.runs.SqlAction) + len(d.runs.StoreAction))
-	for _, action := range d.runs.StoreAction {
-		go func(action *exec.RunAction, errChan chan error) {
-			defer d.wg.Done()
-			d.executor.ExecRunAction(action, errChan)
-		}(action, errChan)
-	}
-	for _, action := range d.runs.SqlAction {
-		go func(action *exec.RunAction, errChan chan error) {
-			defer d.wg.Done()
-			d.executor.ExecRunAction(action, errChan)
-		}(action, errChan)
-	}
-	d.wg.Wait()
+		// time for ts-meta campaign
+		time.Sleep(time.Second)
 
-	select {
-	case <-errChan:
+		// start all ts-store and ts-sql concurrently
+		d.wg.Add(len(d.runs.SqlAction) + len(d.runs.StoreAction))
+		for _, action := range d.runs.StoreAction {
+			go func(action *exec.RunAction, errChan chan error) {
+				defer d.wg.Done()
+				d.executor.ExecRunAction(action, errChan)
+			}(action, errChan)
+		}
+		for _, action := range d.runs.SqlAction {
+			go func(action *exec.RunAction, errChan chan error) {
+				defer d.wg.Done()
+				d.executor.ExecRunAction(action, errChan)
+			}(action, errChan)
+		}
+		d.wg.Wait()
 		close(errChan)
-		return errors.New("cluster start failed")
-	default:
+	}()
+
+	var has_err = false
+	go func() {
+		defer wgp.Done()
+		for {
+			err, ok := <-errChan
+			if !ok {
+				break
+			}
+			fmt.Println(err)
+			has_err = true
+		}
+	}()
+
+	wgp.Wait()
+	if has_err {
+		return errors.New("install cluster failed")
+	} else {
 		return nil
 	}
 }

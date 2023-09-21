@@ -1,6 +1,7 @@
 package install
 
 import (
+	"errors"
 	"fmt"
 	"openGemini-UP/pkg/config"
 	"openGemini-UP/pkg/download"
@@ -8,8 +9,6 @@ import (
 	"openGemini-UP/util"
 	"path/filepath"
 	"sync"
-
-	"errors"
 
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -249,35 +248,54 @@ func (d *GeminiInstaller) prepareUploadActions(c *config.Config) error {
 
 func (d *GeminiInstaller) Install() error {
 	fmt.Println("Start to install openGemini...")
-	d.wg.Add(len(d.uploads))
 	errChan := make(chan error, len(d.uploads))
-	for ip, action := range d.uploads {
-		go func(ip string, action *UploadAction, errChan chan error) {
-			defer d.wg.Done()
-			for _, c := range action.uploadInfo {
-				// check whether need to upload the file
-				// only support Linux
-				cmd := fmt.Sprintf("if [ -f %s ]; then echo 'File exists'; else echo 'File not found'; fi", filepath.Join(c.RemotePath, c.FileName))
-				output, err := d.executor.ExecCommand(ip, cmd)
-				if string(output) == "File exists\n" && err == nil {
-					fmt.Printf("%s exists on %s.\n", c.FileName, c.RemotePath)
-				} else {
-					if err := util.UploadFile(action.remoteHost.Ip, c.LocalPath, c.RemotePath, d.sftpClients[action.remoteHost.Ip]); err != nil {
-						fmt.Printf("upload %s to %s error: %v\n", c.LocalPath, action.remoteHost.Ip, err)
-						errChan <- err
+	var wgp sync.WaitGroup
+	wgp.Add(2)
+
+	go func() {
+		defer wgp.Done()
+		d.wg.Add(len(d.uploads))
+		for ip, action := range d.uploads {
+			go func(ip string, action *UploadAction, errChan chan error) {
+				defer d.wg.Done()
+				for _, c := range action.uploadInfo {
+					// check whether need to upload the file
+					// only support Linux
+					cmd := fmt.Sprintf("if [ -f %s ]; then echo 'File exists'; else echo 'File not found'; fi", filepath.Join(c.RemotePath, c.FileName))
+					output, err := d.executor.ExecCommand(ip, cmd)
+					if string(output) == "File exists\n" && err == nil {
+						fmt.Printf("%s exists on %s.\n", c.FileName, c.RemotePath)
+					} else {
+						if err := util.UploadFile(action.remoteHost.Ip, c.LocalPath, c.RemotePath, d.sftpClients[action.remoteHost.Ip]); err != nil {
+							fmt.Printf("upload %s to %s error: %v\n", c.LocalPath, action.remoteHost.Ip, err)
+							errChan <- err
+						}
 					}
 				}
-			}
 
-		}(ip, action, errChan)
-	}
-	d.wg.Wait()
-
-	select {
-	case <-errChan:
+			}(ip, action, errChan)
+		}
+		d.wg.Wait()
 		close(errChan)
-		return errors.New("cluster install failed")
-	default:
+	}()
+
+	var has_err = false
+	go func() {
+		defer wgp.Done()
+		for {
+			err, ok := <-errChan
+			if !ok {
+				break
+			}
+			fmt.Println(err)
+			has_err = true
+		}
+	}()
+
+	wgp.Wait()
+	if has_err {
+		return errors.New("install cluster failed")
+	} else {
 		return nil
 	}
 }

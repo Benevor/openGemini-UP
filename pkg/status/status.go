@@ -126,27 +126,48 @@ func (d *GeminiStatusPatroller) tryConnect() error {
 func (d *GeminiStatusPatroller) Patrol() error {
 	statusChan := make(chan ClusterStatusPerServer, len(d.remotes))
 	errChan := make(chan error, len(d.remotes))
-	d.wg.Add(len(d.remotes))
-	for ip := range d.remotes {
-		go d.patrolOneServer(ip, statusChan, errChan)
-	}
-	d.wg.Wait()
-
-	select {
-	case <-errChan:
-		close(errChan)
-		return errors.New("check cluster status failed")
-	default:
-	}
-
-	for {
-		select {
-		case status := <-statusChan:
-			displayGeminiStatus(status)
-		default:
-			return nil
+	var wgp sync.WaitGroup
+	wgp.Add(3)
+	go func() {
+		defer wgp.Done()
+		d.wg.Add(len(d.remotes))
+		for ip := range d.remotes {
+			go d.patrolOneServer(ip, statusChan, errChan)
 		}
+		d.wg.Wait()
+		close(errChan)
+		close(statusChan)
+	}()
+
+	var has_err = false
+	go func() {
+		defer wgp.Done()
+		for {
+			err, ok := <-errChan
+			if !ok {
+				return
+			}
+			fmt.Println(err)
+			has_err = true
+		}
+	}()
+
+	go func() {
+		defer wgp.Done()
+		for {
+			status, ok := <-statusChan
+			if !ok {
+				return
+			}
+			displayGeminiStatus(status)
+		}
+	}()
+
+	wgp.Wait()
+	if has_err {
+		return errors.New("check cluster status failed")
 	}
+	return nil
 }
 
 func (d *GeminiStatusPatroller) patrolOneServer(ip string, statusChan chan ClusterStatusPerServer, errChan chan error) {
